@@ -145,7 +145,27 @@ body.darkCursor #cursor{border-color:#fff;background:#000}
  .feature{min-height:240px}.feature h3{font-size:54px}
  .foodLead,.artIntro,.workLead{display:block}.foodLead span,.artIntro span,.workLead span{display:block;margin-top:12px}
 }
-</style>
+<style>
+#index{perspective:1400px;transform-style:preserve-3d;overflow:hidden}
+.depthStage{position:absolute;inset:-12%;z-index:0;pointer-events:none;transform-style:preserve-3d;will-change:transform}
+.depthOrb,.depthRing,.depthDot,.depthLabel{position:absolute;will-change:transform}
+.depthOrb{border-radius:50%;mix-blend-mode:screen;opacity:.24}
+.orbA{width:32vw;height:32vw;left:8%;top:5%;background:radial-gradient(circle,rgba(255,255,255,.28),transparent 68%);transform:translate3d(var(--mx1,0),var(--my1,0),180px)}
+.orbB{width:22vw;height:22vw;right:4%;bottom:8%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 68%);transform:translate3d(var(--mx2,0),var(--my2,0),-80px)}
+.depthRing{border:1px solid rgba(255,255,255,.12);border-radius:50%;transform-style:preserve-3d}
+.ringA{width:42vw;height:42vw;left:28%;top:14%;transform:translate3d(var(--rx,0),var(--ry,0),80px) rotateX(68deg) rotateZ(-18deg)}
+.ringB{width:68vw;height:68vw;left:10%;top:-6%;border-color:rgba(255,255,255,.055);transform:translate3d(var(--rx2,0),var(--ry2,0),-180px) rotateX(69deg) rotateZ(22deg)}
+.depthDot{width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 18px rgba(255,255,255,.8)}
+.dotA{left:18%;top:32%;transform:translate3d(var(--dx1,0),var(--dy1,0),260px)}
+.dotB{right:20%;top:22%;transform:translate3d(var(--dx2,0),var(--dy2,0),120px)}
+.dotC{right:31%;bottom:19%;transform:translate3d(var(--dx3,0),var(--dy3,0),330px)}
+.depthLabel{font:8px var(--sans);letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.labelA{left:13%;bottom:25%;transform:translate3d(var(--lx1,0),var(--ly1,0),140px) rotate(-90deg)}
+.labelB{right:11%;top:40%;transform:translate3d(var(--lx2,0),var(--ly2,0),220px) rotate(90deg)}
+#index .category{transform-style:preserve-3d;transition:transform .45s cubic-bezier(.22,1,.36,1),box-shadow .45s ease}
+#index .category:hover{transform:translate3d(0,-5px,28px);box-shadow:0 30px 80px rgba(0,0,0,.22)}
+@media(max-width:800px){.orbA{width:55vw;height:55vw}.orbB{width:40vw;height:40vw}.ringA{width:72vw;height:72vw;left:14%}.ringB{width:110vw;height:110vw;left:-5%}.depthLabel{display:none}}
+</style></style>
 </head>
 <body>
 <div id="cursor"></div>
@@ -392,5 +412,23 @@ addEventListener("keydown",e=>{
  if(index.classList.contains("open"))closeIndex();
 });
 </script>
-</body>
-</html>
+<script>
+(()=>{const s=document.querySelector('#index .depthStage'),i=document.getElementById('index');if(!s||!i)return;
+let tx=0,ty=0,x=0,y=0;
+function loop(){x+=(tx-x)*.075;y+=(ty-y)*.075;s.style.transform=`rotateX(${-y*.035}deg) rotateY(${x*.045}deg) translate3d(${x*.16}px,${y*.12}px,0)`;
+s.style.setProperty('--mx1',`${x*.45}px`);s.style.setProperty('--my1',`${y*.35}px`);
+s.style.setProperty('--mx2',`${-x*.22}px`);s.style.setProperty('--my2',`${-y*.18}px`);
+s.style.setProperty('--rx',`${x*.12}px`);s.style.setProperty('--ry',`${y*.10}px`);
+s.style.setProperty('--rx2',`${-x*.08}px`);s.style.setProperty('--ry2',`${-y*.06}px`);
+s.style.setProperty('--dx1',`${x*.75}px`);s.style.setProperty('--dy1',`${y*.55}px`);
+s.style.setProperty('--dx2',`${-x*.5}px`);s.style.setProperty('--dy2',`${-y*.4}px`);
+s.style.setProperty('--dx3',`${x*.35}px`);s.style.setProperty('--dy3',`${y*.28}px`);
+requestAnimationFrame(loop)}i.addEventListener('pointermove',e=>{let r=i.getBoundingClientRect();tx=(e.clientX-r.left-r.width/2)/(r.width/2)*28;ty=(e.clientY-r.top-r.height/2)/(r.height/2)*28});
+i.addEventListener('pointerleave',()=>{tx=ty=0});loop()})();
+</script></body>
+</html><div class="depthStage" aria-hidden="true">
+<div class="depthOrb orbA"></div><div class="depthOrb orbB"></div>
+<div class="depthRing ringA"></div><div class="depthRing ringB"></div>
+<div class="depthDot dotA"></div><div class="depthDot dotB"></div><div class="depthDot dotC"></div>
+<div class="depthLabel labelA">VIZBAK / 001</div><div class="depthLabel labelB">MOVE THROUGH</div>
+</div>
