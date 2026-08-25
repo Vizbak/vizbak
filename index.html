@@ -24,7 +24,7 @@ body.darkCursor #cursor{border-color:#fff;background:#000}
 .chrome button,.indexChrome button{pointer-events:auto;background:none;padding:5px;cursor:none}
 .indexChrome{color:#fff;z-index:3200}
 
-#home{position:fixed;inset:0;z-index:2000;background:var(--paper);display:grid;place-items:center;will-change:transform,clip-path,opacity}
+#home{position:fixed;inset:0;z-index:1000;background:var(--paper);display:grid;place-items:center;will-change:transform,clip-path,opacity}
 .hero{position:relative;background:none;padding:28px;cursor:none}
 .hero h1{margin:0;font:400 clamp(76px,14vw,220px)/.68 var(--serif);letter-spacing:.045em;white-space:nowrap;transform:translate(var(--x,0),var(--y,0));transition:transform .12s ease-out}
 .hero:before,.hero:after{content:"";position:absolute;border:1px solid #111;inset:-5px -26px;opacity:0;transform:scale(.95) rotate(-.7deg);transition:.45s var(--ease)}
@@ -33,7 +33,7 @@ body.darkCursor #cursor{border-color:#fff;background:#000}
 .sub{position:absolute;top:calc(50% + 118px);font:8px var(--sans);letter-spacing:.3em;text-transform:uppercase;color:#777}
 .hint{position:absolute;bottom:23px;font:8px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#999}
 
-#index{position:fixed;inset:0;z-index:1000;background:var(--black);color:#fff;visibility:hidden;opacity:0;transform:scale(1.04);will-change:transform,opacity;overflow:hidden}
+#index{position:fixed;inset:0;z-index:2000;background:var(--black);color:#fff;visibility:hidden;opacity:0;transform:scale(1.04);will-change:transform,opacity;overflow:hidden}
 #index.visible{visibility:visible}
 #index.open{animation:indexIn .9s var(--ease) forwards}
 #index.closing{animation:indexOut .75s var(--ease) forwards}
@@ -58,11 +58,11 @@ body.darkCursor #cursor{border-color:#fff;background:#000}
 .about{--img:url("assets/cv.jpg")}
 .now{--img:url("assets/now.svg")}
 
-.portal{position:fixed;inset:0;z-index:10000;pointer-events:none;visibility:hidden;overflow:hidden}
-.portal.active{visibility:visible}
+.portal{position:fixed;inset:0;z-index:4000;background:transparent;pointer-events:none;visibility:hidden;overflow:hidden}
+.portal.active{visibility:visible;background:transparent}
 .portal .core{position:absolute;left:50%;top:50%;width:0;height:0;border-radius:50%;background:#030303;transform:translate(-50%,-50%);box-shadow:0 0 0 1px #fff8,0 0 90px 10px #fff3;will-change:width,height}
 .portal.active .core{animation:core 1.15s var(--ease) both}
-@keyframes core{0%{width:0;height:0}22%{width:5vw;height:5vw}55%{width:46vw;height:46vw}100%{width:180vw;height:180vw}}
+@keyframes core{0%{width:0;height:0;opacity:1}18%{width:5vw;height:5vw;opacity:1}52%{width:46vw;height:46vw;opacity:.96}78%{width:120vw;height:120vw;opacity:.45}100%{width:180vw;height:180vw;opacity:0}}22%{width:5vw;height:5vw}55%{width:46vw;height:46vw}100%{width:180vw;height:180vw}}
 .portal .ring{position:absolute;left:50%;top:50%;border:1px solid #fff8;border-radius:50%;transform:translate(-50%,-50%) scale(.01);opacity:0}
 .portal.active .ring{animation:portalRing 1.1s var(--ease) both}
 .portal .r1{width:12vw;height:12vw}.portal .r2{width:28vw;height:28vw}.portal .r3{width:52vw;height:52vw}.portal .r4{width:82vw;height:82vw}
@@ -267,27 +267,80 @@ $$("button,a").forEach(el=>{
 });
 
 function openIndex(){
- if(transitioning)return; transitioning=true;
- portal.classList.remove("active"); void portal.offsetWidth; portal.classList.add("active");
- index.classList.add("visible");
- index.classList.remove("closing"); index.classList.add("open");
- home.animate([
-  {clipPath:"circle(100% at 50% 50%)",transform:"scale(1)",opacity:1},
-  {clipPath:"circle(44% at 50% 50%)",transform:"scale(.985)",opacity:1,offset:.42},
-  {clipPath:"circle(0% at 50% 50%)",transform:"scale(.94)",opacity:.98}
- ],{duration:1100,easing:"cubic-bezier(.77,0,.18,1)",fill:"forwards"});
- setTimeout(()=>{home.style.visibility="hidden";transitioning=false},1080);
+ if(transitioning)return;
+ transitioning=true;
+
+ const indexEl=document.getElementById("index");
+ const portalEl=document.getElementById("portal");
+ const homeEl=document.getElementById("home");
+
+ // Put the destination underneath the portal BEFORE the reveal starts.
+ indexEl.style.visibility="visible";
+ indexEl.style.opacity="1";
+ indexEl.style.transform="scale(1.045)";
+ indexEl.classList.remove("closing");
+ indexEl.classList.add("open");
+
+ // Portal is a transient top layer only.
+ portalEl.classList.remove("active");
+ void portalEl.offsetWidth;
+ portalEl.classList.add("active");
+
+ // Home contracts away while the index is already underneath.
+ homeEl.animate([
+   {clipPath:"circle(100% at 50% 50%)",transform:"scale(1)",opacity:1},
+   {clipPath:"circle(62% at 50% 50%)",transform:"scale(1.01)",opacity:1,offset:.30},
+   {clipPath:"circle(20% at 50% 50%)",transform:"scale(1.045)",opacity:.75,offset:.72},
+   {clipPath:"circle(0% at 50% 50%)",transform:"scale(1.08)",opacity:0}
+ ],{duration:1250,easing:"cubic-bezier(.77,0,.18,1)",fill:"forwards"});
+
+ // Smoothly sharpen the index as the portal opens.
+ indexEl.animate([
+   {opacity:.15,transform:"scale(1.045)",filter:"blur(12px)"},
+   {opacity:.72,transform:"scale(1.012)",filter:"blur(4px)",offset:.55},
+   {opacity:1,transform:"scale(1)",filter:"blur(0)"}
+ ],{duration:1150,easing:"cubic-bezier(.22,1,.36,1)",fill:"forwards"});
+
+ setTimeout(()=>{
+   portalEl.classList.remove("active");
+   homeEl.style.visibility="hidden";
+   homeEl.style.opacity="0";
+   homeEl.style.clipPath="circle(0% at 50% 50%)";
+   transitioning=false;
+ },1280);
 }
 function closeIndex(){
- if(transitioning)return; transitioning=true;
- portal.classList.remove("active"); void portal.offsetWidth; portal.classList.add("active");
- index.classList.remove("open");index.classList.add("closing");
+ if(transitioning)return;
+ transitioning=true;
+
+ const indexEl=document.getElementById("index");
+ const portalEl=document.getElementById("portal");
+ const homeEl=document.getElementById("home");
+
+ portalEl.classList.remove("active");
+ void portalEl.offsetWidth;
+ portalEl.classList.add("active");
+
+ indexEl.animate([
+   {opacity:1,transform:"scale(1)",filter:"blur(0)"},
+   {opacity:.2,transform:"scale(1.04)",filter:"blur(8px)"}
+ ],{duration:850,easing:"cubic-bezier(.77,0,.18,1)",fill:"forwards"});
+
  setTimeout(()=>{
-   index.classList.remove("visible","closing");
-   home.style.visibility="visible";
-   home.animate([{clipPath:"circle(0% at 50% 50%)",transform:"scale(.94)"},{clipPath:"circle(100% at 50% 50%)",transform:"scale(1)"}],{duration:1050,easing:"cubic-bezier(.77,0,.18,1)",fill:"forwards"});
- },180);
- setTimeout(()=>{portal.classList.remove("active");transitioning=false},1120);
+   indexEl.style.visibility="hidden";
+   indexEl.classList.remove("visible","open","closing");
+
+   homeEl.style.visibility="visible";
+   homeEl.animate([
+     {clipPath:"circle(0% at 50% 50%)",transform:"scale(1.08)",opacity:0},
+     {clipPath:"circle(100% at 50% 50%)",transform:"scale(1)",opacity:1}
+   ],{duration:1050,easing:"cubic-bezier(.77,0,.18,1)",fill:"forwards"});
+ },360);
+
+ setTimeout(()=>{
+   portalEl.classList.remove("active");
+   transitioning=false;
+ },1250);
 }
 $("#enter").onclick=openIndex;$("#back").onclick=closeIndex;
 
