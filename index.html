@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VIZBAK — Anirudh Gupta</title>
+<style>
+:root{
+ --paper:#f1f0eb;--ink:#090909;--black:#050505;--white:#f5f4ef;
+ --serif:"Bodoni 72","Bodoni MT","Didot","Times New Roman",serif;
+ --sans:Arial,Helvetica,sans-serif;--ease:cubic-bezier(.77,0,.18,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--paper);color:var(--ink)}
+body{font-family:var(--sans);cursor:none}
+button,a{font:inherit;color:inherit}
+button{border:0}
+a{text-decoration:none}
+#cursor{position:fixed;z-index:50000;width:9px;height:9px;border:1.5px solid #000;background:#fff;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);transition:width .22s var(--ease),height .22s var(--ease),mix-blend-mode .22s}
+body.darkCursor #cursor{border-color:#fff;background:#000}
+.cursorBig #cursor{width:24px;height:24px}
+
+.chrome,.indexChrome{position:fixed;z-index:3000;top:22px;left:28px;right:28px;display:flex;justify-content:space-between;align-items:center;font:8px var(--sans);letter-spacing:.22em;text-transform:uppercase;pointer-events:none}
+.chrome button,.indexChrome button{pointer-events:auto;background:none;padding:5px;cursor:none}
+.indexChrome{color:#fff;z-index:3200}
+
+#home{position:fixed;inset:0;z-index:2000;background:var(--paper);display:grid;place-items:center;will-change:transform,clip-path,opacity}
+.hero{position:relative;background:none;padding:28px;cursor:none}
+.hero h1{margin:0;font:400 clamp(76px,14vw,220px)/.68 var(--serif);letter-spacing:.045em;white-space:nowrap;transform:translate(var(--x,0),var(--y,0));transition:transform .12s ease-out}
+.hero:before,.hero:after{content:"";position:absolute;border:1px solid #111;inset:-5px -26px;opacity:0;transform:scale(.95) rotate(-.7deg);transition:.45s var(--ease)}
+.hero:after{inset:-22px -50px;border-color:#999;transform:scale(.95) rotate(1deg)}
+.hero:hover:before,.hero:hover:after{opacity:.35;transform:scale(1)}
+.sub{position:absolute;top:calc(50% + 118px);font:8px var(--sans);letter-spacing:.3em;text-transform:uppercase;color:#777}
+.hint{position:absolute;bottom:23px;font:8px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#999}
+
+#index{position:fixed;inset:0;z-index:1000;background:var(--black);color:#fff;visibility:hidden;opacity:0;transform:scale(1.04);will-change:transform,opacity;overflow:hidden}
+#index.visible{visibility:visible}
+#index.open{animation:indexIn .9s var(--ease) forwards}
+#index.closing{animation:indexOut .75s var(--ease) forwards}
+@keyframes indexIn{from{opacity:0;transform:scale(1.055)}to{opacity:1;transform:scale(1)}}
+@keyframes indexOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.045)}}
+
+#cats{position:absolute;inset:0;display:grid;grid-template-columns:repeat(6,1fr)}
+.cat{position:relative;min-width:0;background:#111;color:#fff;border:0;border-left:1px solid #ffffff24;overflow:hidden;cursor:none;isolation:isolate;transform:translateZ(0)}
+.cat:first-child{border-left:0}
+.cat:before{content:"";position:absolute;inset:-4%;background-image:var(--img);background-size:cover;background-position:center;filter:grayscale(.35) brightness(.42);transform:scale(1.015);transition:transform 1.1s var(--ease),filter 1.1s var(--ease)}
+.cat:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0003 0%,#0001 40%,#000b 100%);z-index:1}
+.cat:hover:before{transform:scale(1.075);filter:grayscale(0) brightness(.58)}
+.cat:hover .catText{transform:translate(-50%,-50%) scale(1.025)}
+.catText{position:absolute;left:50%;top:50%;z-index:3;text-align:center;transform:translate(-50%,-50%);transition:transform .7s var(--ease);width:90%}
+.num{display:block;margin-bottom:17px;font:8px var(--sans);letter-spacing:.25em;color:#d0d0d0}
+.ct{display:block;font:400 clamp(27px,3.4vw,60px)/.82 var(--serif);letter-spacing:.035em;white-space:normal}
+.arrow{display:block;margin-top:18px;font:15px var(--sans)}
+.work{--img:url("assets/work.svg")}
+.art{--img:url("assets/artworks/03-vizbak-canvas.jpg")}
+.food{--img:url("assets/food/01-freshen-up.jpg")}
+.thoughts{--img:url("assets/artworks/01-canvas.jpg")}
+.about{--img:url("assets/cv.jpg")}
+.now{--img:url("assets/now.svg")}
+
+.portal{position:fixed;inset:0;z-index:10000;pointer-events:none;visibility:hidden;overflow:hidden}
+.portal.active{visibility:visible}
+.portal .core{position:absolute;left:50%;top:50%;width:0;height:0;border-radius:50%;background:#030303;transform:translate(-50%,-50%);box-shadow:0 0 0 1px #fff8,0 0 90px 10px #fff3;will-change:width,height}
+.portal.active .core{animation:core 1.15s var(--ease) both}
+@keyframes core{0%{width:0;height:0}22%{width:5vw;height:5vw}55%{width:46vw;height:46vw}100%{width:180vw;height:180vw}}
+.portal .ring{position:absolute;left:50%;top:50%;border:1px solid #fff8;border-radius:50%;transform:translate(-50%,-50%) scale(.01);opacity:0}
+.portal.active .ring{animation:portalRing 1.1s var(--ease) both}
+.portal .r1{width:12vw;height:12vw}.portal .r2{width:28vw;height:28vw}.portal .r3{width:52vw;height:52vw}.portal .r4{width:82vw;height:82vw}
+@keyframes portalRing{0%{opacity:0;transform:translate(-50%,-50%) scale(.01)}18%{opacity:.65}100%{opacity:0;transform:translate(-50%,-50%) scale(3.15)}}
+.portal .word{position:absolute;left:50%;top:50%;color:#fff;font:400 clamp(76px,14vw,220px)/.68 var(--serif);letter-spacing:.045em;transform:translate(-50%,-50%);opacity:0;white-space:nowrap}
+.portal.active .word{animation:portalWord 1.15s var(--ease) both}
+@keyframes portalWord{0%{opacity:0;transform:translate(-50%,-50%) scale(.9)}18%{opacity:1}48%{opacity:.82;transform:translate(-50%,-50%) scale(1.8)}76%{opacity:.18;transform:translate(-50%,-50%) scale(7);filter:blur(4px)}100%{opacity:0;transform:translate(-50%,-50%) scale(16);filter:blur(12px)}}
+
+.page{position:fixed;inset:0;z-index:1500;background:var(--paper);overflow:auto;visibility:hidden;opacity:0;transform:translateY(18px) scale(.985);padding:88px 28px 42px;will-change:transform,opacity}
+.page.open{visibility:visible;animation:pageIn .75s var(--ease) forwards}
+.page.closeAnim{animation:pageOut .55s var(--ease) forwards}
+@keyframes pageIn{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes pageOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.99)}}
+.head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #111;padding-bottom:13px}
+.head h2{margin:0;font:400 clamp(54px,8vw,112px)/.72 var(--serif)}
+.close{background:none;padding:5px;cursor:none;font:8px var(--sans);letter-spacing:.2em;text-transform:uppercase}
+
+.workLead{display:flex;justify-content:space-between;align-items:end;gap:30px;padding:18px 0 14px;border-bottom:1px solid #aaa}
+.workLead p{margin:0;max-width:760px;font:400 clamp(20px,2.7vw,38px)/1.02 var(--serif)}
+.workLead span{font:8px var(--sans);letter-spacing:.18em;color:#777;white-space:nowrap}
+.featureFilms{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.feature{background:#090909;color:#fff;min-height:280px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.feature:before{content:"FEATURE FILM";position:absolute;right:-8px;top:25px;font:8px var(--sans);letter-spacing:.2em;color:#ffffff66;transform:rotate(90deg)}
+.feature h3{margin:0;font:400 clamp(46px,6vw,88px)/.78 var(--serif)}
+.feature p{margin:0;max-width:480px;font:11px/1.5 var(--sans);color:#ccc}
+.imdb{align-self:flex-start;margin-top:18px;border-bottom:1px solid #fff;padding-bottom:3px;font:8px var(--sans);letter-spacing:.14em;text-transform:uppercase}
+.projects{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:18px}
+.project{border-top:1px solid #aaa;padding-top:10px}
+.poster{position:relative;aspect-ratio:16/9;background:#111;overflow:hidden}
+.poster img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .9s var(--ease),filter .9s var(--ease);filter:brightness(.72)}
+.poster:hover img{transform:scale(1.04);filter:brightness(.9)}
+.play{position:absolute;left:50%;top:50%;width:58px;height:58px;border:1px solid #fff;border-radius:50%;background:#000b;color:#fff;transform:translate(-50%,-50%);cursor:none}
+.external{position:absolute;right:9px;top:9px;background:#000c;color:#fff;padding:7px 9px;font:8px var(--sans);letter-spacing:.1em;text-transform:uppercase}
+.pt{display:flex;justify-content:space-between;gap:20px;margin-top:9px}
+.pt b{font:10px var(--sans);letter-spacing:.1em;text-transform:uppercase}.pt span{font:8px var(--sans);color:#777;text-transform:uppercase}.pd{margin:6px 0 16px;font:11px/1.4 var(--sans);color:#555}
+
+.clients{margin-top:42px;border-top:1px solid #111;padding-top:14px}
+.clientHead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px}
+.clientHead h3{margin:0;font:400 clamp(40px,5.3vw,75px)/.78 var(--serif)}
+.clientHead span{font:8px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#777}
+.wall{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid #aaa;border-left:1px solid #aaa}
+.client{min-height:150px;border-right:1px solid #aaa;border-bottom:1px solid #aaa;display:grid;place-items:center;position:relative;padding:18px;background:#f6f5f0;transition:background .4s var(--ease),transform .4s var(--ease)}
+.client:hover{background:#fff;transform:translateY(-3px)}
+.client img{max-width:84%;max-height:78px;width:auto;height:auto;object-fit:contain;display:block}
+.client small{position:absolute;bottom:9px;font:7px var(--sans);letter-spacing:.15em;text-transform:uppercase;color:#999}
+.clientFilm{background:#090909;color:#fff;cursor:none;grid-template-rows:1fr auto}.clientFilm:hover{background:#111}.clientFilm .filmName{font:400 31px/.8 var(--serif);text-align:center}.clientFilm .filmRole{font:8px var(--sans);letter-spacing:.15em;text-transform:uppercase;color:#aaa}
+.clientFilm small{color:#aaa}
+
+.aboutgrid{display:grid;grid-template-columns:1fr 1fr;gap:35px;margin-top:24px}.cv{width:100%;display:block;background:#050b0b}.abouttext{font:400 clamp(28px,3.5vw,56px)/1.04 var(--serif)}.abouttext small{display:block;margin-top:38px;font:10px/1.55 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#777}.facts{margin-top:28px;border-top:1px solid #aaa;display:grid;grid-template-columns:1fr 1fr}.fact{padding:12px 0;border-bottom:1px solid #aaa;font:11px/1.5 var(--sans)}.fact:nth-child(odd){padding-right:15px;border-right:1px solid #aaa}.fact:nth-child(even){padding-left:15px}.fact strong{display:block;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:#777}.links{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}.links a{font:8px var(--sans);letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid #111;padding-bottom:3px}
+
+.foodLead{display:flex;justify-content:space-between;align-items:end;gap:30px;padding:18px 0 14px;border-bottom:1px solid #aaa}.foodLead p{margin:0;max-width:760px;font:400 clamp(20px,2.7vw,38px)/1.02 var(--serif)}.foodLead span{font:8px var(--sans);letter-spacing:.2em;color:#777}
+.foodBook{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}.dish{overflow:hidden;background:#111}.dishOpen{display:block;width:100%;padding:0;background:none;cursor:none}.dish img{width:100%;height:auto;display:block;transition:transform .9s var(--ease)}.dish:hover img{transform:scale(1.018)}
+.foodViewer,.artViewer{position:fixed;inset:0;z-index:25000;background:#050505f4;display:none;align-items:center;justify-content:center;padding:4vw}.viewerOn{display:flex!important}.foodViewer img{max-width:88vw;max-height:92vh}.viewerClose{position:absolute;right:28px;top:22px;color:#fff;background:none;cursor:none;font:8px var(--sans);letter-spacing:.2em}
+
+.artIntro{display:flex;justify-content:space-between;align-items:end;gap:30px;padding:18px 0 14px;border-bottom:1px solid #aaa}.artIntro p{margin:0;max-width:760px;font:400 clamp(20px,2.7vw,38px)/1.02 var(--serif)}.artIntro span{font:8px var(--sans);letter-spacing:.18em;color:#777}
+.artGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:30px;margin-top:25px;padding-bottom:30px}
+.artCard{position:relative;padding:28px;background:#e8e6df;box-shadow:0 20px 50px #0001;min-height:500px;display:flex;align-items:center;justify-content:center}
+.artFrame{background:#f9f8f3;padding:18px 18px 55px;box-shadow:0 14px 35px #0002;border:1px solid #d3d0c8;max-width:92%;max-height:92%;position:relative;cursor:none}
+.artFrame:before{content:"";position:absolute;inset:7px;border:1px solid #e5e2da;pointer-events:none}
+.artFrame img{display:block;max-width:100%;max-height:520px;width:auto;height:auto;object-fit:contain}
+.artMeta{position:absolute;left:18px;bottom:16px;font:8px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:#777}
+
+.copy{max-width:900px;margin-top:40px;font:400 clamp(30px,4vw,60px)/1.02 var(--serif)}.copy small{display:block;max-width:560px;margin-top:42px;font:10px/1.5 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#777}
+
+#videoViewer{position:fixed;inset:0;z-index:24000;background:#050505f5;display:none;align-items:center;justify-content:center;padding:5vw}.videoOn{display:flex!important}.videoFrame{width:min(1200px,92vw);aspect-ratio:16/9;background:#000;position:relative}.videoFrame iframe{width:100%;height:100%;border:0}.videoClose{position:absolute;right:0;top:-42px;color:#fff;background:none;cursor:none;font:8px var(--sans);letter-spacing:.2em}
+
+@media(max-width:900px){
+ body{cursor:auto}#cursor{display:none}
+ .chrome,.indexChrome{left:18px;right:18px}
+ #cats{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr)}
+ .cat{border-bottom:1px solid #fff2}.catText{width:80%}.ct{font-size:33px}
+ .page{padding:78px 18px 30px}.projects,.featureFilms,.foodBook,.artGrid,.aboutgrid{grid-template-columns:1fr}
+ .wall{grid-template-columns:repeat(2,1fr)}
+ .client{min-height:125px}.artCard{min-height:420px}
+}
+@media(max-width:520px){
+ .hero h1,.portal .word{font-size:17vw}
+ .sub{top:calc(50% + 86px)}
+ .wall{grid-template-columns:1fr 1fr}.client{min-height:110px;padding:12px}.client img{max-height:58px}
+ .feature{min-height:240px}.feature h3{font-size:54px}
+ .foodLead,.artIntro,.workLead{display:block}.foodLead span,.artIntro span,.workLead span{display:block;margin-top:12px}
+}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+
+<div class="chrome"><span>VIZBAK / ANIRUDH GUPTA</span><button id="surprise">SURPRISE ME</button></div>
+
+<section id="home">
+  <button class="hero" id="enter" aria-label="Enter VIZBAK">
+    <h1 id="logo">VIZBAK</h1>
+  </button>
+  <div class="sub">things i make</div>
+  <div class="hint">click the name ↓</div>
+</section>
+
+<section id="index">
+  <div class="indexChrome"><span>VISUAL BAKBAK / INDEX</span><button id="back">BACK TO NOTHING</button></div>
+  <div id="cats">
+    <button class="cat work" data-page="workPage"><div class="catText"><span class="num">01</span><span class="ct">WORK</span><span class="arrow">↗</span></div></button>
+    <button class="cat art" data-page="artPage"><div class="catText"><span class="num">02</span><span class="ct">ART</span><span class="arrow">↗</span></div></button>
+    <button class="cat food" data-page="foodPage"><div class="catText"><span class="num">03</span><span class="ct">FOOD</span><span class="arrow">↗</span></div></button>
+    <button class="cat thoughts" data-page="thoughtsPage"><div class="catText"><span class="num">04</span><span class="ct">THOUGHTS</span><span class="arrow">↗</span></div></button>
+    <button class="cat about" data-page="aboutPage"><div class="catText"><span class="num">05</span><span class="ct">ABOUT</span><span class="arrow">↗</span></div></button>
+    <button class="cat now" data-page="nowPage"><div class="catText"><span class="num">06</span><span class="ct">NOW</span><span class="arrow">↗</span></div></button>
+  </div>
+</section>
+
+<div class="portal" id="portal"><div class="core"></div><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="ring r4"></div><div class="word">VIZBAK</div></div>
+
+<section class="page" id="workPage">
+  <div class="head"><h2>Work</h2><button class="close">Close ×</button></div>
+  <div class="workLead"><p>Commercials, brand films, music videos, documentaries and visual production.</p><span>SELECTED WORK / 10</span></div>
+
+  <div class="featureFilms">
+    <article class="feature"><div><span style="font:8px var(--sans);letter-spacing:.2em;color:#aaa">01 / FEATURE FILM</span><h3>October</h3></div><div><p>Camera Trainee · Shoojit Sircar · 2018</p><a class="imdb" href="https://www.imdb.com/title/tt7700730/" target="_blank" rel="noopener">IMDb ↗</a></div></article>
+    <article class="feature"><div><span style="font:8px var(--sans);letter-spacing:.2em;color:#aaa">02 / FEATURE DOCUMENTARY</span><h3>All That<br>Breathes</h3></div><div><p>VFX + Graphic Work · Shaunak Sen · 2022</p><a class="imdb" href="https://www.imdb.com/title/tt16377862/" target="_blank" rel="noopener">IMDb ↗</a></div></article>
+  </div>
+
+  <div class="projects">
+    <article class="project"><div class="poster" data-video="IrxFtxjnC5k"><img src="https://img.youtube.com/vi/IrxFtxjnC5k/hqdefault.jpg" alt="Acquaviva Swim Spa"><button class="play">▶</button><a class="external" href="https://www.youtube.com/watch?v=IrxFtxjnC5k" target="_blank">Open ↗</a></div><div class="pt"><b>Acquaviva Swim Spa</b><span>Ad Film</span></div><p class="pd">Advertising film.</p></article>
+    <article class="project"><div class="poster" data-video="N1IHW1uggEo"><img src="https://img.youtube.com/vi/N1IHW1uggEo/hqdefault.jpg" alt="Antriksh — Sabki Kahani"><button class="play">▶</button><a class="external" href="https://www.youtube.com/watch?v=N1IHW1uggEo" target="_blank">Open ↗</a></div><div class="pt"><b>Antriksh — Sabki Kahani</b><span>Music Video</span></div><p class="pd">Music video.</p></article>
+    <article class="project"><div class="poster" data-video="4MDuNtZ93_c"><img src="https://img.youtube.com/vi/4MDuNtZ93_c/hqdefault.jpg" alt="Fairtrade — Rice Impact"><button class="play">▶</button><a class="external" href="https://www.youtube.com/watch?v=4MDuNtZ93_c" target="_blank">Open ↗</a></div><div class="pt"><b>Fairtrade — Rice Impact</b><span>Documentary</span></div><p class="pd">Impact documentary film.</p></article>
+    <article class="project"><div class="poster" data-video="FYEmBaNXTL8"><img src="https://img.youtube.com/vi/FYEmBaNXTL8/hqdefault.jpg" alt="Ochre Athletica"><button class="play">▶</button><a class="external" href="https://youtu.be/FYEmBaNXTL8" target="_blank">Open ↗</a></div><div class="pt"><b>Ochre Athletica</b><span>Ad Film</span></div><p class="pd">Advertising film.</p></article>
+    <article class="project"><div class="poster" data-video="yjKSCEl0kmI"><img src="https://img.youtube.com/vi/yjKSCEl0kmI/hqdefault.jpg" alt="Organic Tattva"><button class="play">▶</button><a class="external" href="https://youtu.be/yjKSCEl0kmI" target="_blank">Open ↗</a></div><div class="pt"><b>Organic Tattva</b><span>Ad Film</span></div><p class="pd">Advertising film.</p></article>
+    <article class="project"><div class="poster" style="display:grid;place-items:center"><div style="font:400 52px var(--serif);color:#fff">HYATT</div><a class="external" href="https://drive.google.com/file/d/1qq6lDYkAXoizfg_UHj3Enb9w2eMZFLrc/view" target="_blank">Open ↗</a></div><div class="pt"><b>Hyatt</b><span>Film</span></div><p class="pd">Brand film hosted on Drive.</p></article>
+    <article class="project"><div class="poster" style="display:grid;place-items:center"><div style="font:400 42px var(--serif);color:#fff">COUNTRY INN</div><a class="external" href="https://www.linkedin.com/posts/tanmaychandel_country-inn-approached-us-to-create-a-brand-ugcPost-7476591848094867456-a3jV/" target="_blank">Open ↗</a></div><div class="pt"><b>Country Inn & Suites</b><span>Brand Film</span></div><p class="pd">Brand film campaign.</p></article>
+    <article class="project"><div class="poster" style="display:grid;place-items:center"><div style="font:400 58px var(--serif);color:#fff">DAKU</div><a class="external" href="https://www.instagram.com/p/DV_MApolHcR/" target="_blank">Open ↗</a></div><div class="pt"><b>Daku Rum</b><span>Ad Campaign</span></div><p class="pd">Advertising campaign.</p></article>
+  </div>
+
+  <div class="clients">
+    <div class="clientHead"><h3>Clients</h3><span>original marks / click to visit</span></div>
+    <div class="wall">
+      <a class="client" href="https://elle.in/" target="_blank"><img src="assets/logos/elle.png" alt="ELLE"><small>ELLE</small></a>
+      <a class="client" href="https://smaaash.in/" target="_blank"><img src="assets/logos/smaaash.png" alt="SMAAASH"><small>SMAAASH</small></a>
+      <a class="client" href="https://www.marriott.com/en-us/hotels/deldm-le-meridien-gurgaon-delhi-ncr/overview/" target="_blank"><img src="assets/logos/le-meridien.png" alt="Le Méridien Gurgaon"><small>Le Méridien</small></a>
+      <a class="client" href="https://www.tatacliq.com/" target="_blank"><img src="assets/logos/tata-cliq.png" alt="TATA CLiQ"><small>TATA CLiQ</small></a>
+      <a class="client" href="https://www.harmonyhouseindia.org/" target="_blank"><img src="assets/logos/harmony-house.png" alt="Harmony House"><small>Harmony House</small></a>
+      <a class="client" href="https://arcticfox.com/" target="_blank"><img src="assets/logos/arctic-fox.png" alt="Arctic Fox"><small>Arctic Fox</small></a>
+      <a class="client" href="https://organictattva.com/" target="_blank"><img src="assets/logos/organic-tattva.png" alt="Organic Tattva"><small>Organic Tattva</small></a>
+      <a class="client" href="https://www.jiostar.com/" target="_blank"><img src="assets/logos/fox-traveller.png" alt="Fox Traveller"><small>Fox Traveller</small></a>
+      <a class="client" href="https://www.penguin.co.in/" target="_blank"><img src="assets/logos/penguin-classics.png" alt="Penguin Classics"><small>Penguin Classics</small></a>
+      <a class="client" href="https://prasarbharati.gov.in/" target="_blank"><img src="assets/logos/dd-punjabi.png" alt="DD Punjabi"><small>DD Punjabi</small></a>
+      <a class="client clientFilm" href="https://www.imdb.com/title/tt7700730/" target="_blank"><div class="filmName">October</div><div class="filmRole">Camera Trainee</div><small>Feature Film · IMDb ↗</small></a>
+      <a class="client clientFilm" href="https://www.imdb.com/title/tt16377862/" target="_blank"><div class="filmName">All That Breathes</div><div class="filmRole">VFX + Graphic Work</div><small>Feature Documentary · IMDb ↗</small></a>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="artPage">
+  <div class="head"><h2>Art</h2><button class="close">Close ×</button></div>
+  <div class="artIntro"><p>Things I make when nobody asked me to make anything.</p><span>PAINT / TEXTILE / MIXED MEDIA</span></div>
+  <div class="artGrid">
+    <article class="artCard"><button class="artFrame artOpen" data-art="assets/artworks/01-canvas.jpg"><img src="assets/artworks/01-canvas.jpg" alt="Mixed media canvas"><span class="artMeta">01 / mixed media</span></button></article>
+    <article class="artCard"><button class="artFrame artOpen" data-art="assets/artworks/02-red-canvas.jpg"><img src="assets/artworks/02-red-canvas.jpg" alt="Red geometric canvas"><span class="artMeta">02 / acrylic canvas</span></button></article>
+    <article class="artCard"><button class="artFrame artOpen" data-art="assets/artworks/03-vizbak-canvas.jpg"><img src="assets/artworks/03-vizbak-canvas.jpg" alt="VIZBAK canvas"><span class="artMeta">03 / VIZBAK</span></button></article>
+    <article class="artCard"><button class="artFrame artOpen" data-art="assets/artworks/04-textile.jpg"><img src="assets/artworks/04-textile.jpg" alt="Illustrated textile work"><span class="artMeta">04 / textile</span></button></article>
+    <article class="artCard"><button class="artFrame artOpen" data-art="assets/artworks/05-portrait.jpg"><img src="assets/artworks/05-portrait.jpg" alt="Painted portrait"><span class="artMeta">05 / portrait</span></button></article>
+  </div>
+</section>
+
+<section class="page" id="foodPage">
+  <div class="head"><h2>Food</h2><button class="close">Close ×</button></div>
+  <div class="foodLead"><p>Six things I made because apparently making films wasn't enough.</p><span>COOKBOOK / 001—006</span></div>
+  <div class="foodBook">
+    <article class="dish"><button class="dishOpen" data-food="assets/food/01-freshen-up.jpg"><img src="assets/food/01-freshen-up.jpg" alt="I. Freshen Up"></button></article>
+    <article class="dish"><button class="dishOpen" data-food="assets/food/02-eat-your-greens.jpg"><img src="assets/food/02-eat-your-greens.jpg" alt="II. Eat Your Greens"></button></article>
+    <article class="dish"><button class="dishOpen" data-food="assets/food/03-favourite-subject.jpg"><img src="assets/food/03-favourite-subject.jpg" alt="III. Favourite Subject"></button></article>
+    <article class="dish"><button class="dishOpen" data-food="assets/food/04-tropical-tumbling.jpg"><img src="assets/food/04-tropical-tumbling.jpg" alt="IV. Tropical Tumbling"></button></article>
+    <article class="dish"><button class="dishOpen" data-food="assets/food/05-sweet-notes.jpg"><img src="assets/food/05-sweet-notes.jpg" alt="V. Sweet Notes"></button></article>
+    <article class="dish"><button class="dishOpen" data-food="assets/food/06-cuffin.jpg"><img src="assets/food/06-cuffin.jpg" alt="VI. Cuffin"></button></article>
+  </div>
+</section>
+
+<section class="page" id="thoughtsPage"><div class="head"><h2>Thoughts</h2><button class="close">Close ×</button></div><div class="copy">Notes, ideas, observations, film thoughts and half-formed things that deserve somewhere to exist.<small>Not a blog. More like a living notebook.</small></div></section>
+
+<section class="page" id="aboutPage">
+  <div class="head"><h2>About</h2><button class="close">Close ×</button></div>
+  <div class="aboutgrid"><img class="cv" src="assets/cv.jpg" alt="Anirudh Gupta CV"><div><div class="abouttext">Anirudh Gupta, aka <em>Visual Bakbak</em>.<small>A one-stop shop for visual media production needs. Started in 2016 — camera, editing, visual effects, pre-production, post and problem-solving.</small></div><div class="facts"><div class="fact"><strong>Started</strong>2016</div><div class="fact"><strong>Based</strong>Delhi, India</div><div class="fact"><strong>Experience</strong>Camera · Editing · VFX · Post</div><div class="fact"><strong>Tools</strong>Premiere Pro · Photoshop · After Effects · Lumetri</div><div class="fact"><strong>Instagram</strong>@visual_bakbak</div><div class="fact"><strong>Email</strong>visualbakbak@gmail.com</div><div class="fact"><strong>Phone</strong>+91 9310540665</div><div class="fact"><strong>Also</strong>Known to bake decadent cakes :)</div></div><div class="links"><a href="https://www.instagram.com/visual_bakbak" target="_blank">Instagram ↗</a><a href="mailto:visualbakbak@gmail.com">Email ↗</a><a href="tel:+919310540665">Call ↗</a></div></div></div>
+</section>
+
+<section class="page" id="nowPage"><div class="head"><h2>Now</h2><button class="close">Close ×</button></div><div class="copy">Currently making things, building this archive and figuring out the next strange idea.<small>Update this whenever life changes.</small></div></section>
+
+<div class="artViewer" id="artViewer"><button class="viewerClose" id="artClose">CLOSE ×</button><img id="artViewerImg" src="" alt=""></div>
+<div class="foodViewer" id="foodViewer"><button class="viewerClose" id="foodClose">CLOSE ×</button><img id="foodViewerImg" src="" alt=""></div>
+<div id="videoViewer"><div class="videoFrame"><button class="videoClose" id="videoClose">CLOSE ×</button><iframe id="videoFrame" src="" allow="autoplay; encrypted-media; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const cursor=$("#cursor"),home=$("#home"),index=$("#index"),portal=$("#portal");
+let transitioning=false;
+
+addEventListener("mousemove",e=>{
+  cursor.style.left=e.clientX+"px";cursor.style.top=e.clientY+"px";
+  const x=(e.clientX/innerWidth-.5)*10,y=(e.clientY/innerHeight-.5)*10;
+  $("#logo").style.setProperty("--x",x+"px");$("#logo").style.setProperty("--y",y+"px");
+});
+$$("button,a").forEach(el=>{
+  el.addEventListener("mouseenter",()=>document.body.classList.add("cursorBig"));
+  el.addEventListener("mouseleave",()=>document.body.classList.remove("cursorBig"));
+});
+
+function openIndex(){
+ if(transitioning)return; transitioning=true;
+ portal.classList.remove("active"); void portal.offsetWidth; portal.classList.add("active");
+ index.classList.add("visible");
+ index.classList.remove("closing"); index.classList.add("open");
+ home.animate([
+  {clipPath:"circle(100% at 50% 50%)",transform:"scale(1)",opacity:1},
+  {clipPath:"circle(44% at 50% 50%)",transform:"scale(.985)",opacity:1,offset:.42},
+  {clipPath:"circle(0% at 50% 50%)",transform:"scale(.94)",opacity:.98}
+ ],{duration:1100,easing:"cubic-bezier(.77,0,.18,1)",fill:"forwards"});
+ setTimeout(()=>{home.style.visibility="hidden";transitioning=false},1080);
+}
+function closeIndex(){
+ if(transitioning)return; transitioning=true;
+ portal.classList.remove("active"); void portal.offsetWidth; portal.classList.add("active");
+ index.classList.remove("open");index.classList.add("closing");
+ setTimeout(()=>{
+   index.classList.remove("visible","closing");
+   home.style.visibility="visible";
+   home.animate([{clipPath:"circle(0% at 50% 50%)",transform:"scale(.94)"},{clipPath:"circle(100% at 50% 50%)",transform:"scale(1)"}],{duration:1050,easing:"cubic-bezier(.77,0,.18,1)",fill:"forwards"});
+ },180);
+ setTimeout(()=>{portal.classList.remove("active");transitioning=false},1120);
+}
+$("#enter").onclick=openIndex;$("#back").onclick=closeIndex;
+
+function openPage(id){
+ const p=$("#"+id); if(!p)return;
+ p.classList.remove("closeAnim"); void p.offsetWidth; p.classList.add("open");
+ index.classList.remove("open"); index.style.visibility="hidden";
+}
+function closePage(p){
+ p.classList.remove("open");p.classList.add("closeAnim");
+ setTimeout(()=>{p.classList.remove("closeAnim");index.style.visibility="visible";index.classList.add("open")},560);
+}
+$$(".cat").forEach(c=>c.onclick=()=>openPage(c.dataset.page));
+$$(".close").forEach(c=>c.onclick=()=>closePage(c.closest(".page")));
+
+$$(".poster[data-video]").forEach(p=>p.onclick=e=>{
+ if(e.target.closest("a"))return;
+ $("#videoFrame").src="https://www.youtube-nocookie.com/embed/"+p.dataset.video+"?autoplay=1&rel=0&modestbranding=1&playsinline=1";
+ $("#videoViewer").classList.add("videoOn");
+});
+function closeVideo(){$("#videoViewer").classList.remove("videoOn");$("#videoFrame").src=""}
+$("#videoClose").onclick=closeVideo;$("#videoViewer").onclick=e=>{if(e.target.id==="videoViewer")closeVideo()};
+
+$$(".dishOpen").forEach(b=>b.onclick=()=>{
+ $("#foodViewerImg").src=b.dataset.food;$("#foodViewer").classList.add("viewerOn");
+});
+function closeFood(){$("#foodViewer").classList.remove("viewerOn");$("#foodViewerImg").src=""}
+$("#foodClose").onclick=closeFood;$("#foodViewer").onclick=e=>{if(e.target.id==="foodViewer")closeFood()};
+
+$$(".artOpen").forEach(b=>b.onclick=()=>{
+ $("#artViewerImg").src=b.dataset.art;$("#artViewer").classList.add("viewerOn");
+});
+function closeArt(){$("#artViewer").classList.remove("viewerOn");$("#artViewerImg").src=""}
+$("#artClose").onclick=closeArt;$("#artViewer").onclick=e=>{if(e.target.id==="artViewer")closeArt()};
+
+$("#surprise").onclick=()=>{
+ if(index.style.visibility!=="visible")openIndex();
+ setTimeout(()=>{
+  const ids=["workPage","artPage","foodPage","thoughtsPage","aboutPage","nowPage"];
+  openPage(ids[Math.floor(Math.random()*ids.length)]);
+ },1100);
+};
+addEventListener("keydown",e=>{
+ if(e.key!=="Escape")return;
+ if($("#videoViewer").classList.contains("videoOn"))return closeVideo();
+ if($("#foodViewer").classList.contains("viewerOn"))return closeFood();
+ if($("#artViewer").classList.contains("viewerOn"))return closeArt();
+ const p=$(".page.open"); if(p)return closePage(p);
+ if(index.classList.contains("open"))closeIndex();
+});
+</script>
+</body>
+</html>
