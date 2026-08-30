@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>VIZBAK</title>
+<style>
+:root{--paper:#f1f0eb;--ink:#090909;--black:#050505;--white:#f5f4ef;--muted:#8a8984;--ease:cubic-bezier(.16,1,.3,1)}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--paper);color:var(--ink)}
+body{font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none;touch-action:none}
+button{font:inherit;color:inherit;border:0;-webkit-tap-highlight-color:transparent}
+#app{position:fixed;inset:0;overflow:hidden;background:var(--paper)}
+#home{position:absolute;inset:0;display:grid;place-items:center;background:var(--paper);z-index:10;transition:opacity .35s var(--ease),transform .9s var(--ease)}
+#hero{position:relative;padding:22px 18px;background:none;touch-action:manipulation}
+#logo{margin:0;font:400 18vw/.68 Georgia,"Times New Roman",serif;letter-spacing:.045em;white-space:nowrap}
+.homeMeta{position:absolute;top:calc(50% + 74px);left:50%;transform:translateX(-50%);font-size:7px;letter-spacing:.28em;text-transform:uppercase;color:#777;white-space:nowrap}
+.homeHint{position:absolute;bottom:max(18px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font-size:7px;letter-spacing:.2em;text-transform:uppercase;color:#999;white-space:nowrap}
+#gridView{position:absolute;inset:0;background:var(--black);color:var(--white);z-index:5;opacity:0;visibility:hidden;transform:scale(1.045);transition:opacity .7s var(--ease),transform .95s var(--ease)}
+#gridView.show{opacity:1;visibility:visible;transform:scale(1)}
+.topbar{position:absolute;top:max(18px,env(safe-area-inset-top));left:18px;right:18px;display:flex;justify-content:space-between;align-items:center;z-index:30;font-size:7px;letter-spacing:.2em;text-transform:uppercase;color:#aaa}
+.topbar button{background:none;color:#aaa;padding:8px;touch-action:manipulation}
+#tiles{position:absolute;inset:62px 10px 18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:8px;perspective:900px}
+.tile{position:relative;overflow:hidden;background:#111;color:#fff;border:1px solid #ffffff20;padding:0;min-width:0;min-height:0;text-align:left;touch-action:manipulation;transform:translate3d(0,0,0);transition:transform .7s var(--ease),opacity .55s var(--ease),border-color .3s,background .3s}
+.tile:active{background:#181818}
+.tile::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0001,#0009);pointer-events:none}
+.tile .bg{position:absolute;inset:-4%;background-image:var(--img);background-size:cover;background-position:center;filter:grayscale(.25) brightness(.42);transform:scale(1.01);transition:transform .9s var(--ease),filter .9s var(--ease)}
+.tileContent{position:absolute;inset:0;z-index:2;padding:13px;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+.num{font-size:6px;letter-spacing:.2em;color:#bbb}.name{font:400 clamp(22px,7vw,32px)/.82 Georgia,"Times New Roman",serif;letter-spacing:.03em}.desc{font-size:6px;letter-spacing:.15em;text-transform:uppercase;color:#aaa}
+.work{--img:url("assets/work.svg")}.art{--img:url("assets/artworks/03-vizbak-canvas.jpg")}.food{--img:url("assets/food/01-freshen-up.jpg")}.thoughts{--img:url("assets/artworks/01-canvas.jpg")}.about{--img:url("assets/cv.jpg")}.now{--img:url("assets/now.svg")}
+#gridLogo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:400 11vw/.68 Georgia,"Times New Roman",serif;letter-spacing:.045em;color:#fff;opacity:.16;pointer-events:none;z-index:1;white-space:nowrap}
+#content{position:absolute;inset:0;background:var(--paper);z-index:40;opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .55s var(--ease),transform .7s var(--ease)}
+#content.show{opacity:1;visibility:visible;transform:none}
+.contentTop{position:absolute;top:max(18px,env(safe-area-inset-top));left:18px;right:18px;display:flex;justify-content:space-between;align-items:center;z-index:5;font-size:7px;letter-spacing:.2em;text-transform:uppercase;color:#777}
+.contentTop button{background:none;padding:8px;color:#777;touch-action:manipulation}
+.contentScroll{position:absolute;inset:60px 0 0;overflow:auto;padding:0 18px max(30px,env(safe-area-inset-bottom));touch-action:pan-y}
+.contentHead{padding:12px 0 16px;border-bottom:1px solid #111}
+.contentHead h1{margin:0;font:400 18vw/.7 Georgia,"Times New Roman",serif;letter-spacing:.02em}
+.lead{padding:16px 0;border-bottom:1px solid #aaa;font:400 25px/1.02 Georgia,"Times New Roman",serif}
+.subline{margin-top:10px;font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:#777}
+.cards{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+.card{border-top:1px solid #aaa;padding-top:9px}.card img{display:block;width:100%;height:auto}.card h3{margin:9px 0 0;font:400 28px/.9 Georgia,"Times New Roman",serif}.card p{margin:7px 0 10px;font-size:10px;line-height:1.45;color:#666}
+.darkCard{background:#090909;color:#fff;padding:18px;min-height:180px;display:flex;flex-direction:column;justify-content:space-between}.darkCard h3{margin:0;font:400 48px/.8 Georgia,"Times New Roman",serif}.darkCard p{color:#bbb}
+.artImg{background:#e8e6df;padding:18px}.artImg img{background:#f9f8f3;padding:12px;width:100%;height:auto}
+.foodImg img{width:100%;display:block}
+.factGrid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #aaa;margin-top:20px}.fact{padding:12px 8px 12px 0;border-bottom:1px solid #aaa;font-size:10px;line-height:1.45}.fact:nth-child(even){padding-left:8px;border-left:1px solid #aaa}.fact strong{display:block;font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:#777;margin-bottom:4px}
+#transition{position:absolute;inset:0;z-index:100;pointer-events:none;overflow:hidden;opacity:0;background:#050505}
+#transition.run{animation:transitionIn 850ms var(--ease) both}
+#transitionWord{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.7);color:#f5f4ef;font:900 18vw/.7 Arial,sans-serif;letter-spacing:-.09em;white-space:nowrap;opacity:0}
+#transition.run #transitionWord{animation:wordDive 850ms var(--ease) both}
+@keyframes transitionIn{0%{opacity:0}12%{opacity:1}78%{opacity:1}100%{opacity:0}}
+@keyframes wordDive{0%{opacity:0;transform:translate(-50%,-50%) scale(.7);filter:blur(10px)}12%{opacity:1;transform:translate(-50%,-50%) scale(.82);filter:blur(5px)}48%{opacity:1;transform:translate(-50%,-50%) scale(1.4);filter:blur(0)}78%{opacity:.6;transform:translate(-50%,-50%) scale(3.8);filter:blur(2px)}100%{opacity:0;transform:translate(-50%,-50%) scale(8);filter:blur(10px)}}
+@media(min-width:801px){#app{display:none}body::before{content:"";display:grid;place-items:center;position:fixed;inset:0;background:#f1f0eb;color:#090909;font:12px Arial,sans-serif;content:"Desktop version is loaded separately."}}
+</style>
+</head>
+<body>
+<div id="app">
+<section id="home">
+<button id="hero" type="button"><h1 id="logo">VIZBAK</h1></button>
+<div class="homeMeta">things i make</div><div class="homeHint">tap the name ↓</div>
+</section>
+
+<section id="gridView">
+<div class="topbar"><span>VISUAL BAKBAK / INDEX</span><button id="back">BACK</button></div>
+<div id="gridLogo">VIZBAK</div>
+<div id="tiles">
+<button class="tile work" data-page="work"><div class="bg"></div><div class="tileContent"><span class="num">01</span><span class="name">WORK</span><span class="desc">films / campaigns</span></div></button>
+<button class="tile art" data-page="art"><div class="bg"></div><div class="tileContent"><span class="num">02</span><span class="name">ART</span><span class="desc">paint / mixed media</span></div></button>
+<button class="tile food" data-page="food"><div class="bg"></div><div class="tileContent"><span class="num">03</span><span class="name">FOOD</span><span class="desc">photography / dishes</span></div></button>
+<button class="tile thoughts" data-page="thoughts"><div class="bg"></div><div class="tileContent"><span class="num">04</span><span class="name">THOUGHTS</span><span class="desc">notes / fragments</span></div></button>
+<button class="tile about" data-page="about"><div class="bg"></div><div class="tileContent"><span class="num">05</span><span class="name">ABOUT</span><span class="desc">visual bakbak</span></div></button>
+<button class="tile now" data-page="now"><div class="bg"></div><div class="tileContent"><span class="num">06</span><span class="name">NOW</span><span class="desc">currently</span></div></button>
+</div>
+</section>
+
+<section id="content">
+<div class="contentTop"><span>VIZBAK / <b id="contentNum">01</b></span><button id="close">CLOSE ×</button></div>
+<div class="contentScroll" id="contentScroll">
+<div class="contentHead"><h1 id="contentTitle">WORK</h1></div>
+<div id="contentBody"></div>
+</div>
+</section>
+
+<div id="transition"><div id="transitionWord">VIZBAK</div></div>
+</div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const home=$("#home"),grid=$("#gridView"),content=$("#content"),tiles=$$(".tile"),transition=$("#transition");
+const body=$("#contentBody"),title=$("#contentTitle"),num=$("#contentNum"),scroll=$("#contentScroll");
+let state="home",busy=false,selected=null;
+const DATA={
+ work:{n:"01",title:"WORK",lead:"Commercials, brand films, music videos, documentaries and visual production.",html:`<div class="subline">SELECTED WORK</div><div class="cards"><div class="darkCard"><span>01 / FEATURE FILM</span><h3>October</h3><p>Camera Trainee · Shoojit Sircar · 2018</p></div><div class="darkCard"><span>02 / FEATURE DOCUMENTARY</span><h3>All That<br>Breathes</h3><p>VFX + Graphic Work · Shaunak Sen · 2022</p></div><div class="card"><img src="https://img.youtube.com/vi/IrxFtxjnC5k/hqdefault.jpg"><h3>Acquaviva Swim Spa</h3><p>Advertising film.</p></div><div class="card"><img src="https://img.youtube.com/vi/N1IHW1uggEo/hqdefault.jpg"><h3>Antriksh — Sabki Kahani</h3><p>Music video.</p></div><div class="card"><img src="https://img.youtube.com/vi/4MDuNtZ93_c/hqdefault.jpg"><h3>Fairtrade — Rice Impact</h3><p>Impact documentary.</p></div></div>`},
+ art:{n:"02",title:"ART",lead:"Things I make when nobody asked me to make anything.",html:`<div class="subline">PAINT / TEXTILE / MIXED MEDIA</div><div class="cards"><div class="card artImg"><img src="assets/artworks/01-canvas.jpg"></div><div class="card artImg"><img src="assets/artworks/02-red-canvas.jpg"></div><div class="card artImg"><img src="assets/artworks/03-vizbak-canvas.jpg"></div><div class="card artImg"><img src="assets/artworks/04-textile.jpg"></div><div class="card artImg"><img src="assets/artworks/05-portrait.jpg"></div></div>`},
+ food:{n:"03",title:"FOOD",lead:"Six things I made because apparently making films wasn't enough.",html:`<div class="subline">COOKBOOK / 001—006</div><div class="cards"><div class="card foodImg"><img src="assets/food/01-freshen-up.jpg"></div><div class="card foodImg"><img src="assets/food/02-eat-your-greens.jpg"></div><div class="card foodImg"><img src="assets/food/03-favourite-subject.jpg"></div><div class="card foodImg"><img src="assets/food/04-tropical-tumbling.jpg"></div><div class="card foodImg"><img src="assets/food/05-sweet-notes.jpg"></div><div class="card foodImg"><img src="assets/food/06-cuffin.jpg"></div></div>`},
+ thoughts:{n:"04",title:"THOUGHTS",lead:"Notes, ideas, observations, film thoughts and half-formed things that deserve somewhere to exist.",html:`<div class="subline">NOT A BLOG / MORE LIKE A LIVING NOTEBOOK</div>`},
+ about:{n:"05",title:"ABOUT",lead:"Anirudh Gupta, aka Visual Bakbak.",html:`<div class="subline">A ONE-STOP SHOP FOR VISUAL MEDIA PRODUCTION</div><div class="cards"><div class="card"><img src="assets/cv.jpg"></div></div><div class="factGrid"><div class="fact"><strong>Started</strong>2016</div><div class="fact"><strong>Based</strong>Delhi, India</div><div class="fact"><strong>Experience</strong>Camera · Editing · VFX · Post</div><div class="fact"><strong>Tools</strong>Premiere Pro · Photoshop · After Effects · Lumetri</div><div class="fact"><strong>Instagram</strong>@visual_bakbak</div><div class="fact"><strong>Email</strong>visualbakbak@gmail.com</div></div>`},
+ now:{n:"06",title:"NOW",lead:"Currently making things, building this archive and figuring out the next strange idea.",html:`<div class="subline">UPDATE THIS WHENEVER LIFE CHANGES</div>`}
+};
+function enterGrid(){if(busy||state!=="home")return;busy=true;transition.classList.remove("run");void transition.offsetWidth;transition.classList.add("run");home.style.opacity="0";home.style.transform="scale(.94)";setTimeout(()=>{home.style.visibility="hidden";grid.classList.add("show");state="grid";busy=false},500)}
+function backHome(){if(busy||state!=="grid")return;busy=true;grid.classList.remove("show");home.style.visibility="visible";requestAnimationFrame(()=>{home.style.opacity="1";home.style.transform="none"});setTimeout(()=>{state="home";busy=false},750)}
+function openPage(tile){if(busy||state!=="grid")return;busy=true;selected=tile;const key=tile.dataset.page,d=DATA[key];num.textContent=d.n;title.textContent=d.title;body.innerHTML=`<div class="lead">${d.lead}</div>${d.html}`;scroll.scrollTop=0;
+const rect=tile.getBoundingClientRect(),cx=innerWidth/2,cy=innerHeight/2;const dx=cx-(rect.left+rect.width/2),dy=cy-(rect.top+rect.height/2);const scale=Math.min(1.55,Math.max(1.12,(innerWidth*.82)/rect.width));
+tiles.forEach(t=>{if(t!==tile)t.style.transform="translate3d(0,0,-90px) scale(.96)";t.style.opacity=t===tile?"1":".5"});
+tile.style.transform=`translate3d(${dx}px,${dy}px,260px) scale(${scale})`;setTimeout(()=>{content.classList.add("show");setTimeout(()=>{grid.classList.remove("show");state="content";busy=false},420)},230)}
+function closePage(){if(busy||state!=="content")return;busy=true;content.classList.remove("show");setTimeout(()=>{grid.classList.add("show");tiles.forEach(t=>{t.style.transform="";t.style.opacity="1"});state="grid";busy=false},560)}
+$("#hero").addEventListener("click",enterGrid);$("#back").addEventListener("click",backHome);$("#close").addEventListener("click",closePage);tiles.forEach(t=>t.addEventListener("click",()=>openPage(t)));
+addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(state==="content")closePage();else if(state==="grid")backHome()});
+</script>
+</body>
+</html>
