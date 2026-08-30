@@ -13,6 +13,10 @@
         }
       ],
       "destination": "/mobile.html"
+    },
+    {
+      "source": "/",
+      "destination": "/desktop.html"
     }
   ]
 }
