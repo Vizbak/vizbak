@@ -16,7 +16,7 @@
     },
     {
       "source": "/",
-      "destination": "/desktop.html"
+      "destination": "/desktop-v2.html"
     }
   ]
 }
