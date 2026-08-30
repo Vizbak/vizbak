@@ -9,6 +9,6 @@ export default function middleware(request) {
   const isMobile = /android|iphone|ipad|ipod|mobile/i.test(userAgent);
 
   return rewrite(
-    new URL(isMobile ? '/mobile.html' : '/api/desktop', request.url)
+    new URL(isMobile ? '/mobile.html' : '/desktop-v3.html', request.url)
   );
 }
