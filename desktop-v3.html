@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VIZBAK</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;background:#050505;color:#f5f2e9;font-family:Arial,Helvetica,sans-serif;cursor:none}body{min-height:100vh;overflow-x:hidden}
+#cursor{position:fixed;left:0;top:0;width:42px;height:42px;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .12s ease-out;filter:drop-shadow(0 4px 8px #000)}
+#cursor .penrose{position:absolute;inset:4px;transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(45deg);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+#cursor .penrose i{position:absolute;display:block;background:#f5f2e9;box-shadow:inset 0 0 0 1px #111}
+#cursor .a{width:8px;height:30px;left:14px;top:0;transform:skewY(-30deg)}#cursor .b{width:8px;height:30px;left:2px;top:21px;transform:rotate(120deg) skewY(-30deg)}#cursor .c{width:8px;height:30px;left:26px;top:21px;transform:rotate(-120deg) skewY(-30deg)}
+#cursor.click .penrose{transform:rotateX(58deg) rotateZ(45deg) rotateY(32deg) scale(1.06)}
+.home{min-height:100vh;display:flex;align-items:center;justify-content:center}.home h1{font-family:Impact,Arial Black,sans-serif;font-size:clamp(110px,18vw,320px);letter-spacing:.035em;margin:0;color:#f5f2e9;line-height:.8}
+.site{padding:28px 3vw 32px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:44px}.brand{font-weight:800;font-size:20px;letter-spacing:-.06em}.cart{font-size:13px;letter-spacing:.08em}
+.logo{font-family:Impact,Arial Black,sans-serif;font-size:clamp(100px,16vw,270px);line-height:.72;letter-spacing:.015em;text-align:center;margin:0 0 45px;color:#f5f2e9}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.tile{position:relative;aspect-ratio:1.62;overflow:hidden;border:1px solid #b99042;border-radius:10px;background:#111;isolation:isolate;transition:transform .7s cubic-bezier(.2,.8,.2,1),filter .7s,opacity .7s;cursor:none}.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.55) saturate(.85);transition:transform 1s cubic-bezier(.2,.8,.2,1),filter 1s}.tile:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0003,#0001 40%,#000b);z-index:1}.tile:hover img{transform:scale(1.055);filter:brightness(.7) saturate(.95)}.tile:hover{transform:translateY(-3px);box-shadow:0 0 25px #b9904230}.label{position:absolute;z-index:2;left:28px;top:25px}.label h2{margin:0;font-family:Impact,Arial Black,sans-serif;font-size:clamp(30px,3vw,58px);font-weight:400;line-height:.9}.label span{display:block;margin-top:12px;font-size:12px;letter-spacing:.12em}.icon{position:absolute;z-index:2;left:28px;bottom:22px;font-size:26px}.grid.dim .tile:not(.active){transform:translateZ(-80px) scale(.96);opacity:.45;filter:brightness(.55)}.tile.active{transform:scale(1.08);z-index:10;box-shadow:0 25px 80px #000}
+.work{background:#090909}.work:before{content:"";position:absolute;inset:15%;border:1px solid #f5f2e920;transform:rotate(-8deg);z-index:0}.thoughts{background:radial-gradient(circle at 30% 30%,#27231b,#080808 55%)}.about{background:radial-gradient(circle at 50% 45%,#252017,#070707 65%)}.now{background:linear-gradient(135deg,#151515,#080808)}
+footer{text-align:center;font-size:11px;letter-spacing:.12em;margin-top:34px;color:#bcb8ae}
+@media(max-width:800px){body{cursor:auto}.grid{grid-template-columns:1fr}.logo{font-size:25vw}.site{padding:20px}.tile{cursor:pointer}}
+</style></head><body>
+<div id="cursor"><div class="penrose"><i class="a"></i><i class="b"></i><i class="c"></i></div></div>
+<main class="site"><div class="top"><div class="brand">VIZBAK</div><div class="cart">CART (0)</div></div><h1 class="logo">VIZBAK</h1>
+<section class="grid" id="grid">
+<article class="tile work" data-title="WORK"><img src="assets/work.svg" alt="Faceless work visual"><div class="label"><h2>WORK</h2><span>[01]</span></div><div class="icon">✳</div></article>
+<article class="tile" data-title="ART"><img src="assets/artworks/03-vizbak-canvas.jpg" alt="Artwork"><div class="label"><h2>ARTWORK</h2><span>[02]</span></div><div class="icon">✳</div></article>
+<article class="tile" data-title="FOOD"><img src="assets/food/01-freshen-up.jpg" alt="Food photograph"><div class="label"><h2>FOOD</h2><span>[03]</span></div><div class="icon">◒</div></article>
+<article class="tile thoughts" data-title="THOUGHTS"><div class="label"><h2>THOUGHTS</h2><span>[04]</span></div><div class="icon">⌁</div></article>
+<article class="tile about" data-title="ABOUT"><div class="label"><h2>ABOUT</h2><span>[05]</span></div><div class="icon">✳</div></article>
+<article class="tile now" data-title="NOW"><div class="label"><h2>NOW</h2><span>[06]</span></div><div class="icon">◉</div></article>
+</section><footer>© VIZBAK 2024. ALL RIGHTS RESERVED.</footer></main>
+<script>
+const cursor=document.getElementById('cursor');let mx=innerWidth/2,my=innerHeight/2,cx=mx,cy=my;
+addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+(function loop(){cx+=(mx-cx)*.22;cy+=(my-cy)*.22;cursor.style.left=cx+'px';cursor.style.top=cy+'px';requestAnimationFrame(loop)})();
+addEventListener('mousedown',()=>{cursor.classList.add('click');setTimeout(()=>cursor.classList.remove('click'),700)});
+const grid=document.getElementById('grid');document.querySelectorAll('.tile').forEach(tile=>tile.addEventListener('click',()=>{if(tile.classList.contains('active')){tile.classList.remove('active');grid.classList.remove('dim')}else{document.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));tile.classList.add('active');grid.classList.add('dim')}}));
+</script></body></html>
