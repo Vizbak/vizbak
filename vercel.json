@@ -12,11 +12,22 @@
           }
         }
       ],
-      "destination": "/mobile.html"
+      "destination": "/mobile-final.html"
     },
     {
       "source": "/",
-      "destination": "/desktop-v3.html"
+      "destination": "/desktop-final.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     }
   ]
 }
