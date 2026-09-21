@@ -64,7 +64,7 @@ export default async function handler(req,res){
 
     const system=SYSTEM+(highRisk?'\nHIGH-RISK SIGNAL DETECTED: prioritize immediate safety and real-world support in this response.':'');
     const result=await generateText({
-      model:'openai/gpt-5.5',
+      model:'openai/gpt-5.6-sol',
       system,
       messages,
       maxOutputTokens:260,
@@ -75,6 +75,7 @@ export default async function handler(req,res){
     res.setHeader('Cache-Control','no-store');
     return res.status(200).json({text,highRisk});
   }catch(e){
+    console.error('GROUND_CHAT_ERROR', e?.stack || e?.message || String(e));
     return res.status(500).json({error:'Chat is temporarily unavailable.'});
   }
 }
