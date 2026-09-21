@@ -2,6 +2,6 @@
   "private": true,
   "dependencies": {
     "@vercel/functions": "latest",
-    "ai": "latest"
+    "@vercel/oidc": "latest"
   }
 }
