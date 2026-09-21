@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#F1EEDF" />
+<meta name="description" content="GROUND gives your brain another job for 60 seconds when it gets stuck in a loop." />
+<title>GROUND — give your brain another job</title>
+<style>
+:root{
+  --paper:#f1eedf;--ink:#111111;--blue:#2146ff;--orange:#ff5a36;--yellow:#f1d54b;--line:#171717;
+  --soft:#ddd8c7;--muted:#666154;--white:#fffdf4;--danger:#c93227;
+}
+html[data-theme="night"]{--paper:#111315;--ink:#f4f1e8;--blue:#7fa2ff;--orange:#ff7b59;--yellow:#f4df6f;--line:#f4f1e8;--soft:#26292d;--muted:#bbb5a7;--white:#191c20;--danger:#ff746b}
+html[data-theme="sage"]{--paper:#e7eadf;--ink:#17201b;--blue:#356f5a;--orange:#d96b45;--yellow:#dfcb69;--line:#17201b;--soft:#cfd7c8;--muted:#5d675f;--white:#f6f6ed;--danger:#ad3f37}
+html[data-theme="mono"]{--paper:#f5f5f2;--ink:#0b0b0b;--blue:#0b0b0b;--orange:#757575;--yellow:#d9d9d4;--line:#0b0b0b;--soft:#deded9;--muted:#666;--white:#fff;--danger:#9a1f1f}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+body{overflow-x:hidden}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:4px solid var(--orange);outline-offset:3px}
+button{border:0;background:none}
+.app{min-height:100svh;display:grid;grid-template-rows:auto 1fr auto;padding:18px 20px 14px;max-width:1220px;margin:auto}
+header{display:grid;grid-template-columns:1fr auto;align-items:center;border-bottom:2px solid var(--line);padding-bottom:10px}
+.logo{font-weight:950;letter-spacing:-.065em;font-size:28px;line-height:1;display:inline-flex;align-items:center;gap:2px;padding:0}
+.logoMark{width:17px;height:17px;background:var(--blue);display:inline-block;transform:rotate(8deg);margin:0 1px 1px 0}
+.headerTools{display:flex;align-items:center;gap:8px}
+.utility{border:2px solid var(--line);padding:8px 10px;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--paper)}
+.utility.on{background:var(--ink);color:var(--paper)}
+.utility:hover{background:var(--blue);color:white;border-color:var(--blue)}
+.themeGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.themeChoice{border:2px solid var(--ink);padding:10px;text-align:left;background:var(--paper);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;font-weight:900;text-transform:uppercase}.themeChoice[aria-pressed="true"]{box-shadow:inset 0 0 0 3px var(--paper);background:var(--ink);color:var(--paper)}.themeSwatch{height:30px;border:2px solid currentColor;margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr 1fr}.themeSwatch i:nth-child(1){background:var(--sw1)}.themeSwatch i:nth-child(2){background:var(--sw2)}.themeSwatch i:nth-child(3){background:var(--sw3)}
+main{display:grid;align-items:center;min-height:0;padding:22px 0}
+.screen{width:100%;animation:enter .22s ease-out}
+@keyframes enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.gridHero{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(240px,.7fr);gap:26px;align-items:end}
+.kicker,.counter,.meta{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;font-size:11px;line-height:1.3;font-weight:800;letter-spacing:.07em}
+.kicker{margin-bottom:14px}.kicker b{background:var(--yellow);padding:2px 5px}
+h1,h2,p{margin:0}
+h1{font-size:clamp(56px,11vw,142px);line-height:.78;letter-spacing:-.085em;font-weight:950;text-transform:uppercase;max-width:920px}
+h1 .block{display:inline-block;background:var(--blue);color:white;padding:.04em .09em .09em;transform:rotate(-1.3deg);margin-top:.08em}
+h2{font-size:clamp(42px,7.4vw,94px);line-height:.89;letter-spacing:-.065em;font-weight:950;text-transform:uppercase;max-width:940px}
+.heroSide{border-left:2px solid var(--line);padding-left:18px;display:grid;gap:15px;align-content:end}
+.heroSide p{font-size:18px;line-height:1.28;max-width:310px}
+.startBtn,.bigBtn{background:var(--ink);color:var(--paper);border:2px solid var(--ink);text-align:left;font-weight:950;text-transform:uppercase;letter-spacing:-.02em;transition:transform .1s ease,background .1s ease;padding:18px 18px}
+.startBtn{font-size:24px;display:flex;justify-content:space-between;align-items:center;gap:20px}.startBtn span:last-child{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
+.startBtn:hover,.bigBtn:hover{background:var(--blue);border-color:var(--blue);transform:translate(-3px,-3px);box-shadow:3px 3px 0 var(--ink)}
+.textBtn{text-decoration:underline;text-underline-offset:4px;font-weight:800;text-align:left;padding:3px 0;width:max-content}
+.textBtn:hover{color:var(--blue)}
+.sentNote{background:var(--yellow);border:2px solid var(--ink);padding:12px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;font-weight:700;max-width:400px}
+.taskWrap{display:grid;grid-template-columns:100px minmax(0,1fr);gap:22px;min-height:62svh}
+.taskRail{border-right:2px solid var(--line);padding-right:15px;display:flex;flex-direction:column;justify-content:space-between}
+.counter{font-size:13px}.counter b{display:block;font-family:Arial,Helvetica,sans-serif;font-size:46px;letter-spacing:-.06em;line-height:.9;margin-top:4px}
+.progressRail{height:220px;width:8px;border:2px solid var(--ink);position:relative;background:transparent}
+.progressRail i{display:block;position:absolute;left:0;right:0;bottom:0;background:var(--blue);height:0;transition:height .25s ease}
+.taskBody{display:grid;grid-template-rows:auto 1fr auto;min-width:0}
+.taskHead{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:20px}
+.modeLabel{background:var(--orange);padding:5px 8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:900;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.skipBtn{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:800;font-size:11px;text-decoration:underline;text-underline-offset:4px;text-transform:uppercase}
+.skipBtn:hover{color:var(--blue)}
+.taskStage{display:grid;place-items:center;min-height:390px;border-top:2px solid var(--line);border-bottom:2px solid var(--line);position:relative;overflow:hidden;background:rgba(255,255,255,.1)}
+.prompt{text-align:center;padding:28px;width:100%}
+.prompt .instruction{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;font-size:12px;font-weight:900;letter-spacing:.08em;margin-bottom:18px}
+.prompt .question{font-size:clamp(54px,9vw,114px);font-weight:950;letter-spacing:-.07em;line-height:.9;overflow-wrap:anywhere}
+.prompt .question.words{font-size:clamp(40px,6vw,76px)}
+.answerBar{display:flex;gap:10px;padding-top:14px}
+.answerInput{flex:1;border:2px solid var(--ink);background:var(--white);padding:16px 14px;font-size:26px;font-weight:800;min-width:0;border-radius:0}
+.answerBtn{background:var(--blue);color:white;border:2px solid var(--blue);padding:16px 22px;font-weight:950;text-transform:uppercase}
+.answerBtn:hover{background:var(--ink);border-color:var(--ink)}
+.feedback{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:800;min-height:16px;padding-top:8px}
+.feedback.good{color:#1d6d31}.feedback.bad{color:var(--danger)}
+.tapStage{width:100%;height:100%;min-height:390px;position:relative;background:var(--white)}
+.target{position:absolute;width:68px;height:68px;border:3px solid var(--ink);border-radius:50%;display:grid;place-items:center;background:var(--yellow);font-weight:950;font-size:28px;transform:translate(-50%,-50%);transition:opacity .12s,transform .12s}
+.target.done{opacity:.12;pointer-events:none;transform:translate(-50%,-50%) scale(.7)}
+.target.active{background:var(--blue);color:white}
+.tapHint{position:absolute;left:14px;bottom:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:800;text-transform:uppercase;background:var(--paper);border:2px solid var(--ink);padding:6px 8px}
+.scribbleShell{width:min(760px,92%);display:grid;gap:10px;padding:18px}
+.scribblePrompt{font-size:clamp(30px,5vw,58px);font-weight:950;letter-spacing:-.05em;text-transform:uppercase;line-height:.9}
+#scribbleCanvas{width:100%;height:290px;background:var(--white);border:3px solid var(--ink);touch-action:none;cursor:crosshair;display:block}
+.scribbleMeter{height:14px;border:2px solid var(--ink);position:relative}.scribbleMeter i{position:absolute;inset:0 auto 0 0;background:var(--orange);width:0;transition:width .1s linear}
+.toneBox{text-align:center;display:grid;gap:20px;justify-items:center;padding:25px}
+.toneIcon{width:130px;height:130px;border:3px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-size:48px;background:var(--yellow)}
+.toneIcon.playing{animation:pulse .34s ease-in-out infinite alternate}@keyframes pulse{to{transform:scale(1.08);background:var(--orange)}}
+.choiceRow{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.choice{border:2px solid var(--ink);background:var(--paper);min-width:56px;padding:12px 14px;font-size:20px;font-weight:900}.choice:hover{background:var(--blue);color:white;border-color:var(--blue)}
+.senseStage{display:grid;grid-template-columns:1fr .85fr;width:100%;height:100%;min-height:390px}.senseWord{display:grid;place-items:center;padding:25px;background:var(--blue);color:white;font-size:clamp(48px,8vw,110px);line-height:.8;letter-spacing:-.07em;font-weight:950;text-transform:uppercase;text-align:center}.senseAction{padding:28px;display:flex;flex-direction:column;justify-content:space-between;gap:20px}.senseAction p{font-size:24px;font-weight:800;line-height:1.12}.foundBtn{background:var(--ink);color:var(--paper);padding:16px;text-transform:uppercase;font-weight:950;text-align:left}.foundBtn:hover{background:var(--orange);color:var(--ink)}
+.endGrid{display:grid;grid-template-columns:1.3fr .7fr;gap:24px;align-items:end}.endChoices{border-left:2px solid var(--ink);padding-left:18px;display:grid;gap:8px}.endChoices button{border:2px solid var(--ink);padding:14px;text-align:left;text-transform:uppercase;font-weight:900;background:transparent}.endChoices button:hover{background:var(--blue);color:white;border-color:var(--blue)}
+.endChoices button.primaryChoice{background:var(--ink);color:var(--paper)}
+.outcome{display:inline-block;background:var(--yellow);border:2px solid var(--ink);padding:7px 9px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:800;margin-bottom:13px;text-transform:uppercase}
+.sharePanel,.settingsPanel,.aboutPanel,.urgentPanel{max-width:820px;border:2px solid var(--ink);background:var(--white);padding:22px;box-shadow:8px 8px 0 var(--blue)}
+.sharePanel h2,.settingsPanel h2,.aboutPanel h2,.urgentPanel h2{font-size:clamp(38px,6vw,70px)}
+.panelCopy{font-size:20px;line-height:1.3;max-width:650px;margin:16px 0 24px}.panelActions{display:flex;flex-wrap:wrap;gap:9px}.panelActions button{border:2px solid var(--ink);padding:13px 15px;text-transform:uppercase;font-weight:900}.panelActions button.main{background:var(--blue);color:white;border-color:var(--blue)}
+.settingRow{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;border-top:2px solid var(--ink);padding:14px 0}.settingRow:last-of-type{border-bottom:2px solid var(--ink)}.settingRow strong{display:block;font-size:18px;text-transform:uppercase}.settingRow small{display:block;color:var(--muted);margin-top:3px;line-height:1.35}.switch{border:2px solid var(--ink);padding:8px 10px;min-width:78px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:900;text-transform:uppercase}.switch.on{background:var(--ink);color:var(--paper)}
+footer{border-top:2px solid var(--line);padding-top:9px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.footerLink{text-decoration:underline;text-underline-offset:3px}.footerLink:hover{color:var(--blue)}
+.hidden{display:none!important}
+@media(max-width:760px){
+  .app{padding:14px 14px 12px}.gridHero,.endGrid{grid-template-columns:1fr;gap:22px}.heroSide,.endChoices{border-left:0;border-top:2px solid var(--ink);padding-left:0;padding-top:14px}.taskWrap{grid-template-columns:54px 1fr;gap:12px}.taskRail{padding-right:8px}.counter b{font-size:30px}.progressRail{height:155px;width:7px}.taskStage{min-height:390px}.tapStage{min-height:390px}.senseStage{grid-template-columns:1fr}.senseWord{min-height:220px}.answerBar{flex-direction:column}.answerBtn{width:100%}.target{width:58px;height:58px;font-size:24px}.heroSide p{max-width:none}footer{align-items:flex-end}.footerHideMobile{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <button class="logo" onclick="home()" aria-label="GROUND home">GR<span class="logoMark" aria-hidden="true"></span>UND</button>
+  <div class="headerTools">
+    <button id="soundButton" class="utility" onclick="toggleSound()" aria-pressed="false">SOUND 0</button>
+    <button id="themeButton" class="utility" onclick="cycleTheme()">THEME</button>
+    <button class="utility" onclick="settings()">•••</button>
+  </div>
+</header>
+<main id="main"></main>
+<footer>
+  <span class="footerHideMobile">NO ACCOUNT · NO STORY REQUIRED · LOCAL SETTINGS ONLY</span>
+  <button class="footerLink" onclick="urgent()">urgent help</button>
+</footer>
+</div>
+<script>
+const main=document.getElementById('main');
+const STORE='ground_profile_v3';
+const defaults={sound:false,haptics:false,noMath:false,theme:'paper',sessions:0,completed:0,outcomes:{quieter:0,same:0,louder:0},perf:{numbers:{n:0,ok:0,rt:0},words:{n:0,ok:0,rt:0},memory:{n:0,ok:0,rt:0},tones:{n:0,ok:0,rt:0}},helped:{visual:0,cognitive:0,motor:0,audio:0,sensory:0}};
+let profile=loadProfile();
+let state=freshState();
+const WORDS=['planet','orange','window','garden','silver','camera','rabbit','pencil','ocean','yellow','basket','forest','violet','coffee','mirror','blanket','ticket','pocket'];
+const SENSES=[
+  {big:'FIND BLUE',copy:'Look away from the screen. Find one blue thing in the room.'},
+  {big:'TOUCH COLD',copy:'Find something cooler than your hand. Touch it for three seconds.'},
+  {big:'FIND 3 EDGES',copy:'Look around. Find three straight edges. Point at each one.'},
+  {big:'FEEL WEIGHT',copy:'Notice where your body is supported by the chair, floor, bed, or wall.'},
+  {big:'HEAR 2 THINGS',copy:'Stop. Listen past the nearest sound. Notice two separate sounds.'}
+];
+function clone(v){return JSON.parse(JSON.stringify(v))}
+function loadProfile(){try{const p=JSON.parse(localStorage.getItem(STORE)||'null');if(p)return deepMerge(defaults,p);const old=JSON.parse(localStorage.getItem('ground_profile_v2')||'null');if(old)return deepMerge(defaults,{sound:!!old.voice,haptics:!!old.haptics,noMath:!!old.noMath,sessions:old.sessions||0,completed:old.completed||0});}catch{}return clone(defaults)}
+function deepMerge(a,b){const o=clone(a);for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&o[k]&&typeof o[k]==='object'&&!Array.isArray(o[k]))o[k]={...o[k],...b[k]};else o[k]=b[k]}return o}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(profile))}catch{}updateSoundButton();updateThemeButton()}
+function freshState(){return{step:0,total:6,plan:[],task:null,taskStarted:0,difficulty:2,instant:false,scribbleDistance:0,lastPoint:null,toneAnswer:null,skips:0}}
+function render(html){main.innerHTML=`<section class="screen">${html}</section>`;window.scrollTo({top:0,behavior:'instant'});updateSoundButton();updateThemeButton()}
+function updateSoundButton(){const b=document.getElementById('soundButton');if(!b)return;b.textContent=profile.sound?'SOUND 1':'SOUND 0';b.classList.toggle('on',profile.sound);b.setAttribute('aria-pressed',String(profile.sound))}
+const THEMES=['paper','night','sage','mono'];
+function themeLabel(t){return({paper:'PAPER',night:'NIGHT',sage:'SAGE',mono:'MONO'})[t]||'PAPER'}
+function applyTheme(){const t=THEMES.includes(profile.theme)?profile.theme:'paper';document.documentElement.dataset.theme=t;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',getComputedStyle(document.documentElement).getPropertyValue('--paper').trim());updateThemeButton()}
+function updateThemeButton(){const b=document.getElementById('themeButton');if(!b)return;b.textContent='THEME '+themeLabel(profile.theme);b.setAttribute('aria-label','Theme: '+themeLabel(profile.theme))}
+function setTheme(t){profile.theme=THEMES.includes(t)?t:'paper';applyTheme();save()}
+function cycleTheme(){const i=THEMES.indexOf(profile.theme);setTheme(THEMES[(i+1+THEMES.length)%THEMES.length]);haptic(10)}
+function toggleSound(){profile.sound=!profile.sound;save();if(profile.sound){haptic(10);say('Sound on.')}else if('speechSynthesis' in window)window.speechSynthesis.cancel()}
+function haptic(p=14){if(profile.haptics&&navigator.vibrate)navigator.vibrate(p)}
+function say(text){if(!profile.sound||!('speechSynthesis' in window))return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.94;u.pitch=.96;u.volume=.9;window.speechSynthesis.speak(u)}
+function isSent(){return new URLSearchParams(location.search).get('sent')==='1'}
+function home(){state=freshState();const sent=isSent();render(`<div class="gridHero"><div><div class="kicker">${sent?'<b>someone sent you this</b>':'when your brain won\'t drop it'}</div><h1>${sent?'NO NEED TO<br>EXPLAIN.':'GIVE IT<br>ANOTHER <span class="block">JOB.</span>'}</h1></div><div class="heroSide">${sent?'<div class="sentNote">Someone thought sixty seconds of this might help. You do not have to reply to them, explain anything, or be “good” at it.</div>':'<p>Sixty seconds. One small task at a time. No story required.</p>'}<button class="startBtn" onclick="start(false)"><span>${sent?'START':'START 60 SEC'}</span><span>↘</span></button><button class="textBtn" onclick="shareGround()">send this to someone ↗</button></div></div>`)}
+function buildPlan(){const cognitive=profile.noMath?['words','memory']:['numbers','words','memory'];const c1=cognitive[rand(0,cognitive.length-1)],c2=cognitive[rand(0,cognitive.length-1)];const plan=['visual',c1,'motor',profile.sound?'audio':'visual',c2,'sensory'];return plan}
+function start(instant=false){state=freshState();state.instant=instant;state.plan=buildPlan();profile.sessions++;save();nextTask()}
+function taskShell(mode,body,footer=''){const pct=Math.round((state.step/state.total)*100);return `<div class="taskWrap"><aside class="taskRail"><div class="counter">STEP<b>${String(state.step+1).padStart(2,'0')}</b>/${String(state.total).padStart(2,'0')}</div><div class="progressRail"><i style="height:${pct}%"></i></div><div class="meta">${profile.sound?'sound on':'silent'}</div></aside><div class="taskBody"><div class="taskHead"><span class="modeLabel">${mode}</span><button class="skipBtn" onclick="skipTask()">different task</button></div><div class="taskStage">${body}</div>${footer}</div></div>`}
+function nextTask(){if(state.step>=state.total){finish();return}const type=state.plan[state.step];if(type==='visual')visualTask();else if(type==='motor')motorTask();else if(type==='audio')audioTask();else if(type==='sensory')sensoryTask();else cognitiveTask(type)}
+function advance(kind){if(kind&&profile.helped[kind]!=null)profile.helped[kind]++;state.step++;save();haptic([8,22,8]);setTimeout(nextTask,120)}
+function skipTask(){state.skips++;let choices=['visual','motor','sensory',profile.noMath?'words':'numbers','words','memory'];if(profile.sound)choices.push('audio');const current=state.plan[state.step];choices=choices.filter(x=>x!==current);state.plan[state.step]=choices[rand(0,choices.length-1)];nextTask()}
+function visualTask(){const positions=[[18,24],[73,18],[28,72],[78,68]];const body=`<div class="tapStage" id="tapStage"><div class="tapHint">tap 1 → 2 → 3 → 4</div>${positions.map((p,i)=>`<button class="target ${i===0?'active':''}" style="left:${p[0]}%;top:${p[1]}%" data-n="${i+1}" onclick="tapTarget(this,${i+1})">${i+1}</button>`).join('')}</div>`;render(taskShell('LOOK + TAP',body));state.tapNext=1;say('Tap one, then two, then three, then four.')} 
+function tapTarget(el,n){if(n!==state.tapNext){haptic(20);return}el.classList.add('done');state.tapNext++;const next=document.querySelector(`.target[data-n="${state.tapNext}"]`);if(next)next.classList.add('active');else advance('visual')}
+function motorTask(){const body=`<div class="scribbleShell"><div class="scribblePrompt">FILL THE BOX.<br>DON'T DRAW ANYTHING.</div><canvas id="scribbleCanvas" width="900" height="360" tabindex="0" aria-label="Scribble area"></canvas><div class="scribbleMeter"><i id="scribbleFill"></i></div><div class="meta">keep your finger moving</div></div>`;render(taskShell('MOVE',body));setupScribble();say('Fill the box with scribble. It does not need to look like anything.')} 
+function setupScribble(){const c=document.getElementById('scribbleCanvas');if(!c)return;const ctx=c.getContext('2d');ctx.lineWidth=18;ctx.lineCap='round';ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--blue').trim()||'#2146ff';let down=false,last=null,total=0,done=false;const point=e=>{const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)}};c.addEventListener('pointerdown',e=>{down=true;last=point(e);c.setPointerCapture(e.pointerId)});c.addEventListener('pointermove',e=>{if(!down||done)return;const p=point(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();total+=Math.hypot(p.x-last.x,p.y-last.y);last=p;const pct=Math.min(100,total/32);const f=document.getElementById('scribbleFill');if(f)f.style.width=pct+'%';if(pct>=100){done=true;setTimeout(()=>advance('motor'),180)}});['pointerup','pointercancel','pointerleave'].forEach(ev=>c.addEventListener(ev,()=>{down=false;last=null}))}
+function cognitiveTask(type){state.taskStarted=performance.now();let task;if(type==='numbers')task=makeNumbers();else if(type==='words')task=makeWords();else task=makeMemory();state.task=task;const body=`<div class="prompt"><div class="instruction">${task.instruction}</div><div class="question ${task.words?'words':''}">${task.q}</div></div>`;const footer=`<div><div class="answerBar"><input id="answer" class="answerInput" autocomplete="off" autocapitalize="off" inputmode="${type==='numbers'?'numeric':'text'}" aria-label="Your answer"><button class="answerBtn" onclick="checkAnswer()">ENTER</button></div><div id="feedback" class="feedback"></div></div>`;render(taskShell(type==='numbers'?'THINK':type==='memory'?'HOLD + FLIP':'FLIP',body,footer));document.getElementById('answer').focus();document.getElementById('answer').addEventListener('keydown',e=>{if(e.key==='Enter')checkAnswer()});say(task.spoken)}
+function makeNumbers(){const d=state.difficulty;let a=rand(7,18+d*7),b=rand(3,10+d*4),minus=Math.random()<.3;if(minus&&b>a)[a,b]=[b,a];return{type:'numbers',instruction:'just the answer',q:`${a} ${minus?'−':'+'} ${b}`,a:String(minus?a-b:a+b),spoken:`What is ${a} ${minus?'minus':'plus'} ${b}?`}}
+function makeWords(){const w=WORDS[rand(0,WORDS.length-1)];return{type:'words',instruction:'type it backwards',q:w.toUpperCase(),a:w.split('').reverse().join(''),spoken:`Type ${w} backwards.`,words:true}}
+function makeMemory(){const len=state.difficulty>=3?5:4,arr=Array.from({length:len},()=>rand(1,9));return{type:'memory',instruction:'type these backwards',q:arr.join('  '),a:arr.slice().reverse().join(''),spoken:`Remember ${arr.join(', ')}. Now type the numbers backwards.`}}
+function checkAnswer(){const inp=document.getElementById('answer'),fb=document.getElementById('feedback');if(!inp||!state.task)return;const raw=inp.value.trim().toLowerCase().replace(/\s+/g,'');if(!raw)return;const answer=String(state.task.a).toLowerCase().replace(/\s+/g,'');const ok=raw===answer;const rt=performance.now()-state.taskStarted;const p=profile.perf[state.task.type];if(p){p.rt=(p.rt*p.n+rt)/(p.n+1);p.n++;if(ok)p.ok++}if(ok){fb.textContent='GOOD. NEXT.';fb.className='feedback good';state.difficulty=Math.min(4,state.difficulty+(rt<4200?1:0));save();setTimeout(()=>advance('cognitive'),260)}else{fb.textContent='NO SCORE. TRY ONCE MORE OR SWITCH TASK.';fb.className='feedback bad';state.difficulty=Math.max(1,state.difficulty-1);inp.select();haptic(20);save()}}
+function audioTask(){state.toneAnswer=rand(3,6);const body=`<div class="toneBox"><div id="toneIcon" class="toneIcon">)))</div><div class="scribblePrompt">COUNT THE TONES</div><button id="playTones" class="bigBtn" onclick="playTones()">PLAY</button><div class="choiceRow">${[2,3,4,5,6,7].map(n=>`<button class="choice" onclick="answerTones(${n})">${n}</button>`).join('')}</div><div id="toneFeedback" class="feedback"></div></div>`;render(taskShell('LISTEN',body));say('Count the tones. Press play.')} 
+async function playTones(){const btn=document.getElementById('playTones'),icon=document.getElementById('toneIcon');if(btn)btn.disabled=true;if(icon)icon.classList.add('playing');try{const AC=window.AudioContext||window.webkitAudioContext;const ctx=new AC();await ctx.resume();for(let i=0;i<state.toneAnswer;i++){const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=440+(i%2)*90;g.gain.value=.0001;o.connect(g);g.connect(ctx.destination);const t=ctx.currentTime+i*.48;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.12,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.18);o.start(t);o.stop(t+.2)}setTimeout(()=>{if(btn)btn.disabled=false;if(icon)icon.classList.remove('playing')},state.toneAnswer*480+250)}catch{if(btn)btn.disabled=false;if(icon)icon.classList.remove('playing');skipTask()}}
+function answerTones(n){const fb=document.getElementById('toneFeedback');const ok=n===state.toneAnswer;const p=profile.perf.tones;p.n++;if(ok)p.ok++;if(ok){if(fb){fb.textContent='YES. NEXT.';fb.className='feedback good'}setTimeout(()=>advance('audio'),220)}else{if(fb){fb.textContent='PLAY IT ONCE MORE.';fb.className='feedback bad'}haptic(20)}save()}
+function sensoryTask(){const s=SENSES[rand(0,SENSES.length-1)];const body=`<div class="senseStage"><div class="senseWord">${s.big}</div><div class="senseAction"><p>${s.copy}</p><button class="foundBtn" onclick="advance('sensory')">DONE →</button></div></div>`;render(taskShell('OUTSIDE THE SCREEN',body));say(s.copy)}
+function finish(){profile.completed++;save();render(`<div class="endGrid"><div><span class="outcome">60 seconds complete</span><h2>IS THE LOOP<br>QUIETER?</h2></div><div class="endChoices"><button onclick="recordOutcome('quieter')">YES, QUIETER</button><button onclick="recordOutcome('same')">ABOUT THE SAME</button><button onclick="recordOutcome('louder')">LOUDER</button></div></div>`);say('Is the loop quieter, about the same, or louder?')}
+function recordOutcome(kind){profile.outcomes[kind]=(profile.outcomes[kind]||0)+1;save();const headline=kind==='quieter'?'GOOD. USE THE SPACE.':kind==='same'?'NO PROBLEM. GO SMALLER.':'STOP PUSHING. GET SUPPORT.';const copy=kind==='quieter'?'You do not have to solve the whole thing. Pick the next ten-minute move.':kind==='same'?'One more round can use different tasks, or you can bring another person in.':'If the spiral is getting stronger, bring another person in rather than trying to out-think it alone.';render(`<div class="endGrid"><div><span class="outcome">${kind}</span><h2>${headline}</h2><p class="panelCopy">${copy}</p></div><div class="endChoices"><button class="primaryChoice" onclick="${kind==='louder'?'human()':'home()'}">${kind==='louder'?'TEXT SOMEONE':'I\'M OK FOR NOW'}</button><button onclick="start(true)">ANOTHER 60 SEC</button><button onclick="human()">BRING IN A PERSON</button><button onclick="shareGround()">SEND GROUND TO SOMEONE</button></div></div>`)}
+function shareGround(){const url=location.origin+location.pathname+'?sent=1';const text='No need to explain anything. Try this for 60 seconds: '+url;render(`<div class="sharePanel"><div class="kicker"><b>send ground</b></div><h2>DON'T GIVE ADVICE.<br>JUST SEND A DOOR.</h2><p class="panelCopy">They open a stripped-back version that says someone sent them sixty seconds of GROUND. No diagnosis. No explanation required.</p><div class="sentNote">${text}</div><div class="panelActions" style="margin-top:18px"><button class="main" onclick="shareNow('${encodeURIComponent(url)}')">SHARE</button><button onclick="copyShare('${encodeURIComponent(url)}',this)">COPY LINK</button><button onclick="home()">BACK</button></div></div>`)}
+async function shareNow(encoded){const url=decodeURIComponent(encoded);const text='No need to explain anything. Try this for 60 seconds.';if(navigator.share){try{await navigator.share({title:'GROUND',text,url});return}catch{}}try{await navigator.clipboard.writeText(url)}catch{}}
+async function copyShare(encoded,btn){const url=decodeURIComponent(encoded);try{await navigator.clipboard.writeText(url);btn.textContent='COPIED'}catch{btn.textContent='COPY MANUALLY'}}
+function human(){const message='My brain is looping hard right now. Can you stay with me for ten minutes? You do not need to fix it.';render(`<div class="sharePanel"><div class="kicker"><b>bring in a person</b></div><h2>BORROW<br>SOMEONE ELSE'S<br>ATTENTION.</h2><p class="panelCopy">You do not need to explain the whole story. Send one sentence.</p><div class="sentNote">${message}</div><div class="panelActions"><button class="main" onclick="shareMessage('${encodeURIComponent(message)}')">SHARE MESSAGE</button><button onclick="copyMessage('${encodeURIComponent(message)}',this)">COPY</button><button onclick="start(true)">KEEP ME BUSY</button></div></div>`)}
+async function shareMessage(e){const text=decodeURIComponent(e);if(navigator.share){try{await navigator.share({text});return}catch{}}try{await navigator.clipboard.writeText(text)}catch{}}
+async function copyMessage(e,btn){try{await navigator.clipboard.writeText(decodeURIComponent(e));btn.textContent='COPIED'}catch{}}
+function settings(){const themeButtons=`<div class="themeGrid">${[
+['paper','PAPER','#f1eedf','#2146ff','#ff5a36'],['night','NIGHT','#111315','#7fa2ff','#ff7b59'],['sage','SAGE','#e7eadf','#356f5a','#d96b45'],['mono','MONO','#f5f5f2','#0b0b0b','#757575']
+].map(([id,label,a,b,c])=>`<button class="themeChoice" aria-pressed="${profile.theme===id}" onclick="setTheme('${id}');settings()"><span class="themeSwatch" style="--sw1:${a};--sw2:${b};--sw3:${c}"><i></i><i></i><i></i></span>${label}</button>`).join('')}</div>`;render(`<div class="settingsPanel"><div class="kicker"><b>settings</b></div><h2>MAKE IT FIT<br>YOUR BRAIN.</h2><div class="settingRow"><div><strong>Colour theme</strong><small>Change the whole visual system. Your choice stays on this device.</small>${themeButtons}</div></div><div class="settingRow"><div><strong>Sound</strong><small>Spoken prompts plus the listening task.</small></div><button class="switch ${profile.sound?'on':''}" onclick="profile.sound=!profile.sound;save();settings()">${profile.sound?'ON':'OFF'}</button></div><div class="settingRow"><div><strong>No maths</strong><small>Use words and memory instead of arithmetic.</small></div><button class="switch ${profile.noMath?'on':''}" onclick="profile.noMath=!profile.noMath;save();settings()">${profile.noMath?'ON':'OFF'}</button></div><div class="settingRow"><div><strong>Haptics</strong><small>Small vibration cues where the device supports them.</small></div><button class="switch ${profile.haptics?'on':''}" onclick="profile.haptics=!profile.haptics;save();haptic([10,20,10]);settings()">${profile.haptics?'ON':'OFF'}</button></div><div class="settingRow"><div><strong>Local profile</strong><small>${profile.completed} completed reset${profile.completed===1?'':'s'}. Settings and simple performance data stay in this browser.</small></div><button class="switch" onclick="eraseLocal()">ERASE</button></div><div class="panelActions" style="margin-top:20px"><button class="main" onclick="home()">DONE</button><button onclick="about()">WHY THIS WORKS</button></div></div>`)}
+function eraseLocal(){try{localStorage.removeItem(STORE)}catch{}profile=clone(defaults);applyTheme();settings()}
+function about(){render(`<div class="aboutPanel"><div class="kicker"><b>why this exists</b></div><h2>DON'T ARGUE WITH<br>THE LOOP.<br>COMPETE WITH IT.</h2><p class="panelCopy">GROUND gives attention a neutral job for a short burst, then points it back toward the room. The tasks rotate between thinking, looking, moving, listening, and sensing so the experience is not dependent on one technique.</p><p class="panelCopy">It is a grounding tool, not medical treatment. It never asks for the story behind the spiral and this build does not require an account.</p><div class="panelActions"><button class="main" onclick="start(false)">TRY 60 SEC</button><button onclick="settings()">BACK</button></div></div>`)}
+function urgent(){render(`<div class="urgentPanel"><div class="kicker"><b>urgent help</b></div><h2>DON'T USE THIS<br>AS A SAFETY PLAN.</h2><p class="panelCopy">If you may act on thoughts of harming yourself or someone else, have taken an overdose, are badly injured, or cannot keep yourself safe, contact local emergency or crisis services now and move toward another person rather than staying alone.</p><div class="panelActions"><button class="main" onclick="human()">HELP ME CONTACT SOMEONE</button><button onclick="home()">BACK</button></div></div>`)}
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+window.addEventListener('keydown',e=>{if(e.key==='Escape')home()});
+applyTheme();
+if(location.hash==='#now')start(true);else home();
+</script>
+</body>
+</html>
