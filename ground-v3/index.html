@@ -299,6 +299,18 @@ function renderChat(){
 }
 function chatGroundMe(){chatHistory.push({role:'user',content:'Don’t analyse it right now. Give me one grounding thing to do.'});sendChatMessage()}
 async function sendChat(e){e.preventDefault();const input=document.getElementById('chatInput');const text=(input?.value||'').trim();if(!text)return;chatHistory.push({role:'user',content:text});renderChat();await sendChatMessage()}
+function localChatFallback(){
+  const last=[...chatHistory].reverse().find(m=>m.role==='user')?.content||'';
+  const t=last.toLowerCase();
+  if(/kill myself|suicid|end my life|want to die|hurt myself|self[- ]?harm|overdose|not safe/.test(t))return "I’m taking that seriously. If you might act on this or you’re not safe right now, move toward another person and contact local emergency or crisis support now. Are you in immediate danger or do you have a plan or means with you?";
+  if(/everyone hates me|nobody likes me|no one likes me/.test(t))return "That sounds brutal to sit in. I don’t know that everyone hates you, even if it feels very convincing right now. Don’t solve the relationship for the next two minutes—put the phone down, get some water, and tell me what happened immediately before this spike.";
+  if(/worthless|useless|failure|hate myself/.test(t))return "You’re feeling very badly about yourself right now, and that can make a total verdict feel factual. It isn’t something you need to settle while you’re this activated. Stand up, get some water, then tell me what set this off.";
+  if(/they hate me|she hates me|he hates me/.test(t))return "Rejection sounds very real right now. We don’t actually know what they’re thinking yet. Don’t send anything for five minutes; tell me what happened right before you decided they hated you.";
+  if(/panic|spiral|overthink|can't stop thinking|cant stop thinking/.test(t))return "Your brain sounds stuck in a loop rather than short on more analysis. Don’t solve it for two minutes—use one GROUND task or put both feet on the floor and name five things you can see. What kicked the loop off?";
+  if(/angry|furious|rage|pissed/.test(t))return "You sound seriously activated. The feeling can be real without this being the best moment to act on it. Put five minutes of distance between you and the situation, then tell me what happened.";
+  if(/sad|empty|lonely|low|depressed/.test(t))return "That sounds heavy, and I’m not going to pretend one sentence fixes it. Make the job smaller for a few minutes: sit somewhere with light, get some water, and tell me what feels hardest right now.";
+  return "I’m here. You don’t have to explain this perfectly, and we don’t need to solve the whole thing at once. Tell me the one thought that keeps repeating most.";
+}
 async function sendChatMessage(){
   const btn=document.getElementById('chatSend');if(btn)btn.disabled=true;
   const log=document.getElementById('chatLog');if(log){const d=document.createElement('div');d.className='msg meta';d.id='chatThinking';d.textContent='GROUND is thinking…';log.appendChild(d);log.scrollTop=log.scrollHeight}
@@ -311,7 +323,7 @@ async function sendChatMessage(){
     renderChat();
   }catch(err){
     document.getElementById('chatThinking')?.remove();
-    chatHistory.push({role:'assistant',content:"I can’t reach the chat service right now. Don’t wait on me—use one grounding task, or bring another person in if this is getting stronger."});
+    chatHistory.push({role:'assistant',content:localChatFallback()});
     renderChat();
   }
 }
