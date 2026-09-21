@@ -1,3 +1,5 @@
+import { generateText } from 'ai';
+
 const SYSTEM = `
 You are GROUND CHAT, a calm text companion for someone who may be emotionally spiralling.
 
@@ -60,27 +62,15 @@ export default async function handler(req,res){
     if(!messages.length)return res.status(400).json({error:'No message'});
     const highRisk=detectHighRisk(messages);
 
-    const token=process.env.VERCEL_OIDC_TOKEN;
-    if(!token)return res.status(503).json({error:'AI Gateway authentication is not enabled for this deployment.'});
-
-    const gatewayMessages=[
-      {role:'system',content:SYSTEM+(highRisk?'\nHIGH-RISK SIGNAL DETECTED: prioritize immediate safety and real-world support in this response.':'')},
-      ...messages
-    ];
-
-    const r=await fetch('https://ai-gateway.vercel.sh/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
-      body:JSON.stringify({
-        model:'openai/gpt-5.5',
-        messages:gatewayMessages,
-        max_tokens:260,
-        temperature:0.55
-      })
+    const system=SYSTEM+(highRisk?'\nHIGH-RISK SIGNAL DETECTED: prioritize immediate safety and real-world support in this response.':'');
+    const result=await generateText({
+      model:'openai/gpt-5.5',
+      system,
+      messages,
+      maxOutputTokens:260,
+      temperature:0.55
     });
-    const data=await r.json();
-    if(!r.ok)throw new Error(data?.error?.message||'Gateway request failed');
-    const text=data?.choices?.[0]?.message?.content?.trim();
+    const text=result.text?.trim();
     if(!text)throw new Error('Empty response');
     res.setHeader('Cache-Control','no-store');
     return res.status(200).json({text,highRisk});
