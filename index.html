@@ -47,6 +47,7 @@ h2{font-size:clamp(42px,7.4vw,94px);line-height:.89;letter-spacing:-.065em;font-
 .startBtn:hover,.bigBtn:hover{background:var(--blue);border-color:var(--blue);transform:translate(-3px,-3px);box-shadow:3px 3px 0 var(--ink)}
 .textBtn{text-decoration:underline;text-underline-offset:4px;font-weight:800;text-align:left;padding:3px 0;width:max-content}
 .textBtn:hover{color:var(--blue)}
+.shareHint{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0;text-align:left;width:max-content;border-bottom:1px solid var(--muted)}.shareHint:hover{color:var(--blue);border-color:var(--blue)}
 .sentNote{background:var(--yellow);border:2px solid var(--ink);padding:12px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;font-weight:700;max-width:400px}
 .taskWrap{display:grid;grid-template-columns:100px minmax(0,1fr);gap:22px;min-height:62svh}
 .taskRail{border-right:2px solid var(--line);padding-right:15px;display:flex;flex-direction:column;justify-content:space-between}
@@ -116,22 +117,92 @@ footer{border-top:2px solid var(--line);padding-top:9px;display:flex;justify-con
 <script>
 const main=document.getElementById('main');
 const STORE='ground_profile_v3';
-const defaults={sound:false,haptics:false,noMath:false,theme:'paper',sessions:0,completed:0,outcomes:{quieter:0,same:0,louder:0},perf:{numbers:{n:0,ok:0,rt:0},words:{n:0,ok:0,rt:0},memory:{n:0,ok:0,rt:0},tones:{n:0,ok:0,rt:0}},helped:{visual:0,cognitive:0,motor:0,audio:0,sensory:0}};
+const defaults={sound:false,haptics:false,noMath:false,theme:'paper',sessions:0,completed:0,usedTaskIds:[],outcomes:{quieter:0,same:0,louder:0},perf:{numbers:{n:0,ok:0,rt:0},words:{n:0,ok:0,rt:0},memory:{n:0,ok:0,rt:0},tones:{n:0,ok:0,rt:0}},helped:{visual:0,cognitive:0,motor:0,audio:0,sensory:0}};
 let profile=loadProfile();
 let state=freshState();
-const WORDS=['planet','orange','window','garden','silver','camera','rabbit','pencil','ocean','yellow','basket','forest','violet','coffee','mirror','blanket','ticket','pocket'];
+const WORDS=['planet','orange','window','garden','silver','camera','rabbit','pencil','ocean','yellow','basket','forest','violet','coffee','mirror','blanket','ticket','pocket','lantern','velvet','magnet','pepper','castle','rocket','button','marble','winter','copper','jungle','bridge','signal','paper','shadow','island','anchor','bottle','cloud','fabric','lemon','river'];
 const SENSES=[
   {big:'FIND BLUE',copy:'Look away from the screen. Find one blue thing in the room.'},
   {big:'TOUCH COLD',copy:'Find something cooler than your hand. Touch it for three seconds.'},
   {big:'FIND 3 EDGES',copy:'Look around. Find three straight edges. Point at each one.'},
   {big:'FEEL WEIGHT',copy:'Notice where your body is supported by the chair, floor, bed, or wall.'},
-  {big:'HEAR 2 THINGS',copy:'Stop. Listen past the nearest sound. Notice two separate sounds.'}
+  {big:'HEAR 2 THINGS',copy:'Stop. Listen past the nearest sound. Notice two separate sounds.'},
+  {big:'FIND ROUND',copy:'Find one circular or curved object. Trace its edge with your eyes.'},
+  {big:'TOUCH TEXTURE',copy:'Touch something with a clear texture. Notice three details about how it feels.'},
+  {big:'FIND RED',copy:'Look away from the screen. Find one red or warm-coloured thing.'},
+  {big:'FEEL YOUR FEET',copy:'Press both feet down for three seconds and notice the pressure.'},
+  {big:'NOTICE LIGHT',copy:'Find the brightest area in the room, then the darkest.'}
 ];
+
+function buildTaskBank(){
+  const bank=[];
+  const add=t=>bank.push({...t,id:'task-'+String(bank.length+1).padStart(3,'0')});
+
+  // 40 varied visual/tap tasks
+  const visualModes=[
+    {kind:'asc',label:'tap low → high'},
+    {kind:'desc',label:'tap high → low'},
+    {kind:'letters',label:'tap A → B → C → D'},
+    {kind:'lettersRev',label:'tap D → C → B → A'},
+    {kind:'odds',label:'tap odd numbers low → high'}
+  ];
+  for(let i=0;i<40;i++) add({type:'visual',variant:i,mode:visualModes[i%visualModes.length]});
+
+  // 40 arithmetic tasks, pre-generated and unique
+  for(let i=0;i<40;i++){
+    const a=11+i,b=3+(i%13),minus=i%3===0;
+    add({type:'numbers',a, b, minus});
+  }
+
+  // 30 word-reversal tasks
+  for(let i=0;i<30;i++) add({type:'words',word:WORDS[i%WORDS.length]});
+
+  // 30 memory-reversal tasks with deterministic unique sequences
+  for(let i=0;i<30;i++){
+    const len=4+(i%2),arr=[];
+    for(let j=0;j<len;j++)arr.push(((i*3+j*2)%9)+1);
+    add({type:'memory',arr});
+  }
+
+  // 30 motor tasks with varied instructions/thresholds
+  const motorPrompts=[
+    'FILL THE BOX.\nDON\'T DRAW ANYTHING.',
+    'SCRIBBLE FAST.\nKEEP MOVING.',
+    'COVER THE CORNERS.\nNO SHAPE NEEDED.',
+    'MAKE LOOPS.\nDO NOT LIFT YOUR FINGER.',
+    'MOVE LEFT + RIGHT.\nKEEP IT MESSY.'
+  ];
+  for(let i=0;i<30;i++) add({type:'motor',prompt:motorPrompts[i%motorPrompts.length],threshold:82+(i%19)});
+
+  // 30 real-world sensory tasks
+  for(let i=0;i<30;i++) add({type:'sensory',sense:SENSES[i%SENSES.length],variant:i});
+
+  return bank; // exactly 200
+}
+const TASK_BANK=buildTaskBank();
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=rand(0,i);[a[i],a[j]]=[a[j],a[i]]}return a}
+function eligibleTask(t){
+  if(profile.noMath&&t.type==='numbers')return false;
+  return true;
+}
+function unseenTasks(){const used=new Set(profile.usedTaskIds||[]);return TASK_BANK.filter(t=>eligibleTask(t)&&!used.has(t.id))}
+function drawTask(){
+  let pool=unseenTasks();
+  if(!pool.length){
+    // Bank exhausted for the current preference set: begin a fresh cycle only then.
+    profile.usedTaskIds=[];
+    pool=TASK_BANK.filter(eligibleTask);
+  }
+  const task=pool[rand(0,pool.length-1)];
+  profile.usedTaskIds.push(task.id);
+  save();
+  return task;
+}
 function clone(v){return JSON.parse(JSON.stringify(v))}
 function loadProfile(){try{const p=JSON.parse(localStorage.getItem(STORE)||'null');if(p)return deepMerge(defaults,p);const old=JSON.parse(localStorage.getItem('ground_profile_v2')||'null');if(old)return deepMerge(defaults,{sound:!!old.voice,haptics:!!old.haptics,noMath:!!old.noMath,sessions:old.sessions||0,completed:old.completed||0});}catch{}return clone(defaults)}
 function deepMerge(a,b){const o=clone(a);for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&o[k]&&typeof o[k]==='object'&&!Array.isArray(o[k]))o[k]={...o[k],...b[k]};else o[k]=b[k]}return o}
 function save(){try{localStorage.setItem(STORE,JSON.stringify(profile))}catch{}updateSoundButton();updateThemeButton()}
-function freshState(){return{step:0,total:6,plan:[],task:null,taskStarted:0,difficulty:2,instant:false,scribbleDistance:0,lastPoint:null,toneAnswer:null,skips:0}}
+function freshState(){return{step:0,total:6,current:null,task:null,taskStarted:0,difficulty:2,instant:false,scribbleDistance:0,lastPoint:null,toneAnswer:null,skips:0,tapOrder:[],tapNextIndex:0}}
 function render(html){main.innerHTML=`<section class="screen">${html}</section>`;window.scrollTo({top:0,behavior:'instant'});updateSoundButton();updateThemeButton()}
 function updateSoundButton(){const b=document.getElementById('soundButton');if(!b)return;b.textContent=profile.sound?'SOUND 1':'SOUND 0';b.classList.toggle('on',profile.sound);b.setAttribute('aria-pressed',String(profile.sound))}
 const THEMES=['paper','night','sage','mono'];
@@ -144,28 +215,60 @@ function toggleSound(){profile.sound=!profile.sound;save();if(profile.sound){hap
 function haptic(p=14){if(profile.haptics&&navigator.vibrate)navigator.vibrate(p)}
 function say(text){if(!profile.sound||!('speechSynthesis' in window))return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.94;u.pitch=.96;u.volume=.9;window.speechSynthesis.speak(u)}
 function isSent(){return new URLSearchParams(location.search).get('sent')==='1'}
-function home(){state=freshState();const sent=isSent();render(`<div class="gridHero"><div><div class="kicker">${sent?'<b>someone sent you this</b>':'when your brain won\'t drop it'}</div><h1>${sent?'NO NEED TO<br>EXPLAIN.':'GIVE IT<br>ANOTHER <span class="block">JOB.</span>'}</h1></div><div class="heroSide">${sent?'<div class="sentNote">Someone thought sixty seconds of this might help. You do not have to reply to them, explain anything, or be “good” at it.</div>':'<p>Sixty seconds. One small task at a time. No story required.</p>'}<button class="startBtn" onclick="start(false)"><span>${sent?'START':'START 60 SEC'}</span><span>↘</span></button><button class="textBtn" onclick="shareGround()">send this to someone ↗</button></div></div>`)}
-function buildPlan(){const cognitive=profile.noMath?['words','memory']:['numbers','words','memory'];const c1=cognitive[rand(0,cognitive.length-1)],c2=cognitive[rand(0,cognitive.length-1)];const plan=['visual',c1,'motor',profile.sound?'audio':'visual',c2,'sensory'];return plan}
-function start(instant=false){state=freshState();state.instant=instant;state.plan=buildPlan();profile.sessions++;save();nextTask()}
-function taskShell(mode,body,footer=''){const pct=Math.round((state.step/state.total)*100);return `<div class="taskWrap"><aside class="taskRail"><div class="counter">STEP<b>${String(state.step+1).padStart(2,'0')}</b>/${String(state.total).padStart(2,'0')}</div><div class="progressRail"><i style="height:${pct}%"></i></div><div class="meta">${profile.sound?'sound on':'silent'}</div></aside><div class="taskBody"><div class="taskHead"><span class="modeLabel">${mode}</span><button class="skipBtn" onclick="skipTask()">different task</button></div><div class="taskStage">${body}</div>${footer}</div></div>`}
-function nextTask(){if(state.step>=state.total){finish();return}const type=state.plan[state.step];if(type==='visual')visualTask();else if(type==='motor')motorTask();else if(type==='audio')audioTask();else if(type==='sensory')sensoryTask();else cognitiveTask(type)}
+function home(){state=freshState();const sent=isSent();render(`<div class="gridHero"><div><div class="kicker">${sent?'<b>someone sent you this</b>':'when your brain won\'t drop it'}</div><h1>${sent?'NO NEED TO<br>EXPLAIN.':'GIVE IT<br>ANOTHER <span class="block">JOB.</span>'}</h1></div><div class="heroSide">${sent?'<div class="sentNote">Someone thought sixty seconds of this might help. You do not have to reply to them, explain anything, or be “good” at it.</div>':'<p>Sixty seconds. One small task at a time. No story required.</p>'}<button class="startBtn" onclick="start(false)"><span>${sent?'START':'START 60 SEC'}</span><span>↘</span></button>${sent?'':'<button class="shareHint" onclick="about()">share GROUND ↗</button>'}</div></div>`)}
+function start(instant=false){state=freshState();state.instant=instant;profile.sessions++;save();nextTask()}
+function taskShell(mode,body,footer=''){const pct=Math.round((state.step/state.total)*100);const remaining=Math.max(0,TASK_BANK.length-(profile.usedTaskIds||[]).length);return `<div class="taskWrap"><aside class="taskRail"><div class="counter">STEP<b>${String(state.step+1).padStart(2,'0')}</b>/${String(state.total).padStart(2,'0')}</div><div class="progressRail"><i style="height:${pct}%"></i></div><div class="meta">${remaining} fresh left</div></aside><div class="taskBody"><div class="taskHead"><span class="modeLabel">${mode}</span><button class="skipBtn" onclick="skipTask()">different task</button></div><div class="taskStage">${body}</div>${footer}</div></div>`}
+function nextTask(){if(state.step>=state.total){finish();return}state.current=drawTask();renderBankTask(state.current)}
+function renderBankTask(t){if(t.type==='visual')visualTask(t);else if(t.type==='motor')motorTask(t);else if(t.type==='sensory')sensoryTask(t);else cognitiveTask(t.type,t)}
 function advance(kind){if(kind&&profile.helped[kind]!=null)profile.helped[kind]++;state.step++;save();haptic([8,22,8]);setTimeout(nextTask,120)}
-function skipTask(){state.skips++;let choices=['visual','motor','sensory',profile.noMath?'words':'numbers','words','memory'];if(profile.sound)choices.push('audio');const current=state.plan[state.step];choices=choices.filter(x=>x!==current);state.plan[state.step]=choices[rand(0,choices.length-1)];nextTask()}
-function visualTask(){const positions=[[18,24],[73,18],[28,72],[78,68]];const body=`<div class="tapStage" id="tapStage"><div class="tapHint">tap 1 → 2 → 3 → 4</div>${positions.map((p,i)=>`<button class="target ${i===0?'active':''}" style="left:${p[0]}%;top:${p[1]}%" data-n="${i+1}" onclick="tapTarget(this,${i+1})">${i+1}</button>`).join('')}</div>`;render(taskShell('LOOK + TAP',body));state.tapNext=1;say('Tap one, then two, then three, then four.')} 
-function tapTarget(el,n){if(n!==state.tapNext){haptic(20);return}el.classList.add('done');state.tapNext++;const next=document.querySelector(`.target[data-n="${state.tapNext}"]`);if(next)next.classList.add('active');else advance('visual')}
-function motorTask(){const body=`<div class="scribbleShell"><div class="scribblePrompt">FILL THE BOX.<br>DON'T DRAW ANYTHING.</div><canvas id="scribbleCanvas" width="900" height="360" tabindex="0" aria-label="Scribble area"></canvas><div class="scribbleMeter"><i id="scribbleFill"></i></div><div class="meta">keep your finger moving</div></div>`;render(taskShell('MOVE',body));setupScribble();say('Fill the box with scribble. It does not need to look like anything.')} 
-function setupScribble(){const c=document.getElementById('scribbleCanvas');if(!c)return;const ctx=c.getContext('2d');ctx.lineWidth=18;ctx.lineCap='round';ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--blue').trim()||'#2146ff';let down=false,last=null,total=0,done=false;const point=e=>{const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)}};c.addEventListener('pointerdown',e=>{down=true;last=point(e);c.setPointerCapture(e.pointerId)});c.addEventListener('pointermove',e=>{if(!down||done)return;const p=point(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();total+=Math.hypot(p.x-last.x,p.y-last.y);last=p;const pct=Math.min(100,total/32);const f=document.getElementById('scribbleFill');if(f)f.style.width=pct+'%';if(pct>=100){done=true;setTimeout(()=>advance('motor'),180)}});['pointerup','pointercancel','pointerleave'].forEach(ev=>c.addEventListener(ev,()=>{down=false;last=null}))}
-function cognitiveTask(type){state.taskStarted=performance.now();let task;if(type==='numbers')task=makeNumbers();else if(type==='words')task=makeWords();else task=makeMemory();state.task=task;const body=`<div class="prompt"><div class="instruction">${task.instruction}</div><div class="question ${task.words?'words':''}">${task.q}</div></div>`;const footer=`<div><div class="answerBar"><input id="answer" class="answerInput" autocomplete="off" autocapitalize="off" inputmode="${type==='numbers'?'numeric':'text'}" aria-label="Your answer"><button class="answerBtn" onclick="checkAnswer()">ENTER</button></div><div id="feedback" class="feedback"></div></div>`;render(taskShell(type==='numbers'?'THINK':type==='memory'?'HOLD + FLIP':'FLIP',body,footer));document.getElementById('answer').focus();document.getElementById('answer').addEventListener('keydown',e=>{if(e.key==='Enter')checkAnswer()});say(task.spoken)}
-function makeNumbers(){const d=state.difficulty;let a=rand(7,18+d*7),b=rand(3,10+d*4),minus=Math.random()<.3;if(minus&&b>a)[a,b]=[b,a];return{type:'numbers',instruction:'just the answer',q:`${a} ${minus?'−':'+'} ${b}`,a:String(minus?a-b:a+b),spoken:`What is ${a} ${minus?'minus':'plus'} ${b}?`}}
-function makeWords(){const w=WORDS[rand(0,WORDS.length-1)];return{type:'words',instruction:'type it backwards',q:w.toUpperCase(),a:w.split('').reverse().join(''),spoken:`Type ${w} backwards.`,words:true}}
-function makeMemory(){const len=state.difficulty>=3?5:4,arr=Array.from({length:len},()=>rand(1,9));return{type:'memory',instruction:'type these backwards',q:arr.join('  '),a:arr.slice().reverse().join(''),spoken:`Remember ${arr.join(', ')}. Now type the numbers backwards.`}}
+function skipTask(){state.skips++;state.current=drawTask();renderBankTask(state.current)}
+function visualTask(task){
+  const layouts=[
+    [[14,20],[72,18],[28,72],[82,68]],
+    [[20,72],[80,24],[48,18],[62,72]],
+    [[12,45],[36,18],[72,30],[84,74]],
+    [[24,20],[76,20],[24,72],[76,72]]
+  ];
+  const pos=layouts[task.variant%layouts.length];
+  let labels=[],order=[];
+  if(task.mode.kind==='letters'||task.mode.kind==='lettersRev'){
+    labels=['A','B','C','D'];order=task.mode.kind==='letters'?[0,1,2,3]:[3,2,1,0];
+  }else{
+    const base=task.mode.kind==='odds'?[1,3,5,7]:[2+(task.variant%5),5+(task.variant%7),8+(task.variant%9),11+(task.variant%11)];
+    labels=base.map(String);
+    const idx=[0,1,2,3];
+    order=task.mode.kind==='desc'?[...idx].reverse():idx;
+  }
+  const shuffled=shuffle([0,1,2,3]);
+  const buttons=shuffled.map((src,k)=>({src,label:labels[src],p:pos[k]}));
+  state.tapOrder=order.map(i=>labels[i]);
+  state.tapNextIndex=0;
+  const body=`<div class="tapStage" id="tapStage"><div class="tapHint">${task.mode.label}</div>${buttons.map((b,i)=>`<button class="target ${b.label===state.tapOrder[0]?'active':''}" style="left:${b.p[0]}%;top:${b.p[1]}%" data-label="${b.label}" onclick="tapTarget(this,'${b.label}')">${b.label}</button>`).join('')}</div>`;
+  render(taskShell('LOOK + TAP',body));
+  say(task.mode.label.replace('→','then'));
+}
+function tapTarget(el,label){
+  if(label!==state.tapOrder[state.tapNextIndex]){haptic(20);return}
+  el.classList.add('done');state.tapNextIndex++;
+  const nextLabel=state.tapOrder[state.tapNextIndex];
+  if(nextLabel){
+    const next=[...document.querySelectorAll('.target')].find(x=>x.dataset.label===nextLabel);
+    if(next)next.classList.add('active');
+  }else advance('visual');
+}
+function motorTask(task){const prompt=(task.prompt||'FILL THE BOX.').replace(/\n/g,'<br>');state.motorThreshold=task.threshold||90;const body=`<div class="scribbleShell"><div class="scribblePrompt">${prompt}</div><canvas id="scribbleCanvas" width="900" height="360" tabindex="0" aria-label="Scribble area"></canvas><div class="scribbleMeter"><i id="scribbleFill"></i></div><div class="meta">keep your finger moving</div></div>`;render(taskShell('MOVE',body));setupScribble();say((task.prompt||'Keep your finger moving.').replace(/\n/g,' '))} 
+function setupScribble(){const c=document.getElementById('scribbleCanvas');if(!c)return;const ctx=c.getContext('2d');ctx.lineWidth=18;ctx.lineCap='round';ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--blue').trim()||'#2146ff';let down=false,last=null,total=0,done=false;const point=e=>{const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)}};c.addEventListener('pointerdown',e=>{down=true;last=point(e);c.setPointerCapture(e.pointerId)});c.addEventListener('pointermove',e=>{if(!down||done)return;const p=point(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();total+=Math.hypot(p.x-last.x,p.y-last.y);last=p;const pct=Math.min(100,total/(state.motorThreshold||90)/.36);const f=document.getElementById('scribbleFill');if(f)f.style.width=pct+'%';if(pct>=100){done=true;setTimeout(()=>advance('motor'),180)}});['pointerup','pointercancel','pointerleave'].forEach(ev=>c.addEventListener(ev,()=>{down=false;last=null}))}
+function cognitiveTask(type,spec){state.taskStarted=performance.now();let task;if(type==='numbers')task=makeNumbers(spec);else if(type==='words')task=makeWords(spec);else task=makeMemory(spec);state.task=task;const body=`<div class="prompt"><div class="instruction">${task.instruction}</div><div class="question ${task.words?'words':''}">${task.q}</div></div>`;const footer=`<div><div class="answerBar"><input id="answer" class="answerInput" autocomplete="off" autocapitalize="off" inputmode="${type==='numbers'?'numeric':'text'}" aria-label="Your answer"><button class="answerBtn" onclick="checkAnswer()">ENTER</button></div><div id="feedback" class="feedback"></div></div>`;render(taskShell(type==='numbers'?'THINK':type==='memory'?'HOLD + FLIP':'FLIP',body,footer));document.getElementById('answer').focus();document.getElementById('answer').addEventListener('keydown',e=>{if(e.key==='Enter')checkAnswer()});say(task.spoken)}
+function makeNumbers(spec){const a=spec.a,b=spec.b,minus=!!spec.minus;return{type:'numbers',instruction:'just the answer',q:`${a} ${minus?'−':'+'} ${b}`,a:String(minus?a-b:a+b),spoken:`What is ${a} ${minus?'minus':'plus'} ${b}?`}}
+function makeWords(spec){const w=spec.word;return{type:'words',instruction:'type it backwards',q:w.toUpperCase(),a:w.split('').reverse().join(''),spoken:`Type ${w} backwards.`,words:true}}
+function makeMemory(spec){const arr=spec.arr;return{type:'memory',instruction:'type these backwards',q:arr.join('  '),a:arr.slice().reverse().join(''),spoken:`Remember ${arr.join(', ')}. Now type the numbers backwards.`}}
 function checkAnswer(){const inp=document.getElementById('answer'),fb=document.getElementById('feedback');if(!inp||!state.task)return;const raw=inp.value.trim().toLowerCase().replace(/\s+/g,'');if(!raw)return;const answer=String(state.task.a).toLowerCase().replace(/\s+/g,'');const ok=raw===answer;const rt=performance.now()-state.taskStarted;const p=profile.perf[state.task.type];if(p){p.rt=(p.rt*p.n+rt)/(p.n+1);p.n++;if(ok)p.ok++}if(ok){fb.textContent='GOOD. NEXT.';fb.className='feedback good';state.difficulty=Math.min(4,state.difficulty+(rt<4200?1:0));save();setTimeout(()=>advance('cognitive'),260)}else{fb.textContent='NO SCORE. TRY ONCE MORE OR SWITCH TASK.';fb.className='feedback bad';state.difficulty=Math.max(1,state.difficulty-1);inp.select();haptic(20);save()}}
 function audioTask(){state.toneAnswer=rand(3,6);const body=`<div class="toneBox"><div id="toneIcon" class="toneIcon">)))</div><div class="scribblePrompt">COUNT THE TONES</div><button id="playTones" class="bigBtn" onclick="playTones()">PLAY</button><div class="choiceRow">${[2,3,4,5,6,7].map(n=>`<button class="choice" onclick="answerTones(${n})">${n}</button>`).join('')}</div><div id="toneFeedback" class="feedback"></div></div>`;render(taskShell('LISTEN',body));say('Count the tones. Press play.')} 
 async function playTones(){const btn=document.getElementById('playTones'),icon=document.getElementById('toneIcon');if(btn)btn.disabled=true;if(icon)icon.classList.add('playing');try{const AC=window.AudioContext||window.webkitAudioContext;const ctx=new AC();await ctx.resume();for(let i=0;i<state.toneAnswer;i++){const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=440+(i%2)*90;g.gain.value=.0001;o.connect(g);g.connect(ctx.destination);const t=ctx.currentTime+i*.48;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.12,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.18);o.start(t);o.stop(t+.2)}setTimeout(()=>{if(btn)btn.disabled=false;if(icon)icon.classList.remove('playing')},state.toneAnswer*480+250)}catch{if(btn)btn.disabled=false;if(icon)icon.classList.remove('playing');skipTask()}}
 function answerTones(n){const fb=document.getElementById('toneFeedback');const ok=n===state.toneAnswer;const p=profile.perf.tones;p.n++;if(ok)p.ok++;if(ok){if(fb){fb.textContent='YES. NEXT.';fb.className='feedback good'}setTimeout(()=>advance('audio'),220)}else{if(fb){fb.textContent='PLAY IT ONCE MORE.';fb.className='feedback bad'}haptic(20)}save()}
-function sensoryTask(){const s=SENSES[rand(0,SENSES.length-1)];const body=`<div class="senseStage"><div class="senseWord">${s.big}</div><div class="senseAction"><p>${s.copy}</p><button class="foundBtn" onclick="advance('sensory')">DONE →</button></div></div>`;render(taskShell('OUTSIDE THE SCREEN',body));say(s.copy)}
+function sensoryTask(task){const s=task.sense;const body=`<div class="senseStage"><div class="senseWord">${s.big}</div><div class="senseAction"><p>${s.copy}</p><button class="foundBtn" onclick="advance('sensory')">DONE →</button></div></div>`;render(taskShell('OUTSIDE THE SCREEN',body));say(s.copy)}
 function finish(){profile.completed++;save();render(`<div class="endGrid"><div><span class="outcome">60 seconds complete</span><h2>IS THE LOOP<br>QUIETER?</h2></div><div class="endChoices"><button onclick="recordOutcome('quieter')">YES, QUIETER</button><button onclick="recordOutcome('same')">ABOUT THE SAME</button><button onclick="recordOutcome('louder')">LOUDER</button></div></div>`);say('Is the loop quieter, about the same, or louder?')}
-function recordOutcome(kind){profile.outcomes[kind]=(profile.outcomes[kind]||0)+1;save();const headline=kind==='quieter'?'GOOD. USE THE SPACE.':kind==='same'?'NO PROBLEM. GO SMALLER.':'STOP PUSHING. GET SUPPORT.';const copy=kind==='quieter'?'You do not have to solve the whole thing. Pick the next ten-minute move.':kind==='same'?'One more round can use different tasks, or you can bring another person in.':'If the spiral is getting stronger, bring another person in rather than trying to out-think it alone.';render(`<div class="endGrid"><div><span class="outcome">${kind}</span><h2>${headline}</h2><p class="panelCopy">${copy}</p></div><div class="endChoices"><button class="primaryChoice" onclick="${kind==='louder'?'human()':'home()'}">${kind==='louder'?'TEXT SOMEONE':'I\'M OK FOR NOW'}</button><button onclick="start(true)">ANOTHER 60 SEC</button><button onclick="human()">BRING IN A PERSON</button><button onclick="shareGround()">SEND GROUND TO SOMEONE</button></div></div>`)}
+function recordOutcome(kind){profile.outcomes[kind]=(profile.outcomes[kind]||0)+1;save();const headline=kind==='quieter'?'GOOD. USE THE SPACE.':kind==='same'?'NO PROBLEM. GO SMALLER.':'STOP PUSHING. GET SUPPORT.';const copy=kind==='quieter'?'You do not have to solve the whole thing. Pick the next ten-minute move.':kind==='same'?'One more round can use different tasks, or you can bring another person in.':'If the spiral is getting stronger, bring another person in rather than trying to out-think it alone.';render(`<div class="endGrid"><div><span class="outcome">${kind}</span><h2>${headline}</h2><p class="panelCopy">${copy}</p></div><div class="endChoices"><button class="primaryChoice" onclick="${kind==='louder'?'human()':'home()'}">${kind==='louder'?'TEXT SOMEONE':'I\'M OK FOR NOW'}</button><button onclick="start(true)">ANOTHER 60 SEC</button><button onclick="human()">BRING IN A PERSON</button></div></div>`)}
 function shareGround(){const url=location.origin+location.pathname+'?sent=1';const text='No need to explain anything. Try this for 60 seconds: '+url;render(`<div class="sharePanel"><div class="kicker"><b>send ground</b></div><h2>DON'T GIVE ADVICE.<br>JUST SEND A DOOR.</h2><p class="panelCopy">They open a stripped-back version that says someone sent them sixty seconds of GROUND. No diagnosis. No explanation required.</p><div class="sentNote">${text}</div><div class="panelActions" style="margin-top:18px"><button class="main" onclick="shareNow('${encodeURIComponent(url)}')">SHARE</button><button onclick="copyShare('${encodeURIComponent(url)}',this)">COPY LINK</button><button onclick="home()">BACK</button></div></div>`)}
 async function shareNow(encoded){const url=decodeURIComponent(encoded);const text='No need to explain anything. Try this for 60 seconds.';if(navigator.share){try{await navigator.share({title:'GROUND',text,url});return}catch{}}try{await navigator.clipboard.writeText(url)}catch{}}
 async function copyShare(encoded,btn){const url=decodeURIComponent(encoded);try{await navigator.clipboard.writeText(url);btn.textContent='COPIED'}catch{btn.textContent='COPY MANUALLY'}}
@@ -176,7 +279,7 @@ function settings(){const themeButtons=`<div class="themeGrid">${[
 ['paper','PAPER','#f1eedf','#2146ff','#ff5a36'],['night','NIGHT','#111315','#7fa2ff','#ff7b59'],['sage','SAGE','#e7eadf','#356f5a','#d96b45'],['mono','MONO','#f5f5f2','#0b0b0b','#757575']
 ].map(([id,label,a,b,c])=>`<button class="themeChoice" aria-pressed="${profile.theme===id}" onclick="setTheme('${id}');settings()"><span class="themeSwatch" style="--sw1:${a};--sw2:${b};--sw3:${c}"><i></i><i></i><i></i></span>${label}</button>`).join('')}</div>`;render(`<div class="settingsPanel"><div class="kicker"><b>settings</b></div><h2>MAKE IT FIT<br>YOUR BRAIN.</h2><div class="settingRow"><div><strong>Colour theme</strong><small>Change the whole visual system. Your choice stays on this device.</small>${themeButtons}</div></div><div class="settingRow"><div><strong>Sound</strong><small>Spoken prompts plus the listening task.</small></div><button class="switch ${profile.sound?'on':''}" onclick="profile.sound=!profile.sound;save();settings()">${profile.sound?'ON':'OFF'}</button></div><div class="settingRow"><div><strong>No maths</strong><small>Use words and memory instead of arithmetic.</small></div><button class="switch ${profile.noMath?'on':''}" onclick="profile.noMath=!profile.noMath;save();settings()">${profile.noMath?'ON':'OFF'}</button></div><div class="settingRow"><div><strong>Haptics</strong><small>Small vibration cues where the device supports them.</small></div><button class="switch ${profile.haptics?'on':''}" onclick="profile.haptics=!profile.haptics;save();haptic([10,20,10]);settings()">${profile.haptics?'ON':'OFF'}</button></div><div class="settingRow"><div><strong>Local profile</strong><small>${profile.completed} completed reset${profile.completed===1?'':'s'}. Settings and simple performance data stay in this browser.</small></div><button class="switch" onclick="eraseLocal()">ERASE</button></div><div class="panelActions" style="margin-top:20px"><button class="main" onclick="home()">DONE</button><button onclick="about()">WHY THIS WORKS</button></div></div>`)}
 function eraseLocal(){try{localStorage.removeItem(STORE)}catch{}profile=clone(defaults);applyTheme();settings()}
-function about(){render(`<div class="aboutPanel"><div class="kicker"><b>why this exists</b></div><h2>DON'T ARGUE WITH<br>THE LOOP.<br>COMPETE WITH IT.</h2><p class="panelCopy">GROUND gives attention a neutral job for a short burst, then points it back toward the room. The tasks rotate between thinking, looking, moving, listening, and sensing so the experience is not dependent on one technique.</p><p class="panelCopy">It is a grounding tool, not medical treatment. It never asks for the story behind the spiral and this build does not require an account.</p><div class="panelActions"><button class="main" onclick="start(false)">TRY 60 SEC</button><button onclick="settings()">BACK</button></div></div>`)}
+function about(){render(`<div class="aboutPanel"><div class="kicker"><b>why this exists</b></div><h2>DON'T ARGUE WITH<br>THE LOOP.<br>COMPETE WITH IT.</h2><p class="panelCopy">GROUND gives attention a neutral job for a short burst, then points it back toward the room. The tasks rotate between thinking, looking, moving, listening, and sensing so the experience is not dependent on one technique.</p><p class="panelCopy">It is a grounding tool, not medical treatment. It never asks for the story behind the spiral and this build does not require an account.</p><div class="panelActions"><button class="main" onclick="start(false)">TRY 60 SEC</button><button onclick="shareGround()">SEND GROUND TO SOMEONE</button><button onclick="settings()">BACK</button></div></div>`)}
 function urgent(){render(`<div class="urgentPanel"><div class="kicker"><b>urgent help</b></div><h2>DON'T USE THIS<br>AS A SAFETY PLAN.</h2><p class="panelCopy">If you may act on thoughts of harming yourself or someone else, have taken an overdose, are badly injured, or cannot keep yourself safe, contact local emergency or crisis services now and move toward another person rather than staying alone.</p><div class="panelActions"><button class="main" onclick="human()">HELP ME CONTACT SOMEONE</button><button onclick="home()">BACK</button></div></div>`)}
 function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 window.addEventListener('keydown',e=>{if(e.key==='Escape')home()});
